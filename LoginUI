@@ -17,24 +17,22 @@ public class LoginUI extends JFrame {
 		
 		loginButton = new JButton("Log In");
 		setUser(new JTextField(""));
-		pass = new JTextField("");
+		setPass(new JTextField(""));
 		
 		JPanel logIn = new JPanel();
 		logIn.setLayout(new FlowLayout());
-        logIn.add(loginButton);
+        	logIn.add(loginButton);
 
-        JPanel inputField = new JPanel();
-        inputField.setLayout(new FlowLayout());
-        inputField.add(getUser());
-        inputField.add(pass);
+        	JPanel inputField = new JPanel();
+       		inputField.setLayout(new FlowLayout());
+       		inputField.add(getUser());
+       		inputField.add(pass);
  
        
         
-        loginButton.addActionListener(new ActionListener() {
-        	public void actionPerformed(ActionEvent e) {
-        		 setPass(pass);
-        	     setUser(user);
-        	     userChecker();
+     		loginButton.addActionListener(new ActionListener() {
+        		public void actionPerformed(ActionEvent e) {
+        	     		userChecker();
         	}
         	
         });
