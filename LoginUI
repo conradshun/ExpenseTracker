@@ -1,0 +1,70 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+public class LoginUI extends JFrame {
+	private static final long serialVersionUID = 1L;
+	private String username;
+	private String password;
+	private JTextField user, pass;
+	private JButton loginButton;
+	
+	public LoginUI() {
+		setTitle("Expense Insight");
+		setSize(500,500);
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		
+		loginButton = new JButton("Log In");
+		setUser(new JTextField(""));
+		pass = new JTextField("");
+		
+		JPanel logIn = new JPanel();
+		logIn.setLayout(new FlowLayout());
+        logIn.add(loginButton);
+
+        JPanel inputField = new JPanel();
+        inputField.setLayout(new FlowLayout());
+        inputField.add(getUser());
+        inputField.add(pass);
+ 
+       
+        
+        loginButton.addActionListener(new ActionListener() {
+        	public void actionPerformed(ActionEvent e) {
+        		 setPass(pass);
+        	     setUser(user);
+        	     userChecker();
+        	}
+        	
+        });
+	}
+
+	public void passwordChecker() {
+		if(password.equals(getPass())) {
+			//calls the Expense Insight App here
+		}
+	}
+	
+	public void userChecker() {
+		if(username.equals(getUser())) {
+			passwordChecker();
+		}
+	}
+	
+	public JTextField getPass() {
+		return pass;
+	}
+	
+	public void setPass(JTextField pass) {
+		this.pass = pass;
+	}
+
+	public JTextField getUser() {
+		return user;
+	}
+
+	public void setUser(JTextField user) {
+		this.user = user;
+	}
+}
