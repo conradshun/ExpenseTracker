@@ -18,7 +18,7 @@ class Month {
     }
 
     public String getMonthName() {
-        return monthNumber[monthNumber - 1];
+        return monthNames[monthNumber - 1];
     }
 
     @Override
