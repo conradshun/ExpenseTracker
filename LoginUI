@@ -57,7 +57,7 @@ public class LoginUI extends JFrame {
             }
         });
     }
-
+    // checks the user and password if it is in the database
     public void userChecker() {
         String username = userField.getText(); // Get username from text field
         String password = passField.getText(); // Get password from text field
