@@ -4,65 +4,79 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class LoginUI extends JFrame {
-	private static final long serialVersionUID = 1L;
-	private String username;
-	private String password;
-	private JTextField user, pass;
-	private JButton loginButton;
-	
-	public LoginUI() {
-		setTitle("Expense Insight");
-		setSize(500,500);
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		
-		loginButton = new JButton("Log In");
-		setUser(new JTextField(""));
-		setPass(new JTextField(""));
-		
-		JPanel logIn = new JPanel();
-		logIn.setLayout(new FlowLayout());
-        	logIn.add(loginButton);
+    private static final long serialVersionUID = 1L;
+    private JTextField userField, passField;
+    private JButton loginButton, signinButton;
+    private UserAccount userAccount; // Instance of UserAccount to manage users
 
-        	JPanel inputField = new JPanel();
-       		inputField.setLayout(new FlowLayout());
-       		inputField.add(getUser());
-       		inputField.add(pass);
- 
-       
+    public LoginUI() {
+        setTitle("Expense Insight");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        userAccount = new UserAccount(); // Initialize UserAccount
+
+        // Create a label for the title and set a large font
+        JLabel titleLabel = new JLabel("EXPENSE INSIGHT");
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 24)); // Set font size and style
+        titleLabel.setHorizontalAlignment(SwingConstants.CENTER); // Center the label
+
+        // Initialize buttons and text fields
+        loginButton = new JButton("Log In");
+        signinButton = new JButton("Sign In");
+        userField = new JTextField(20); // Set width of text field
+        passField = new JTextField(20); // Set width of text field
+
+        // Use GridLayout for aligning labels and text fields
+        JPanel userInputField = new JPanel(); 
+        userInputField.add(new JLabel("Username:"));
+        userInputField.add(userField);
         
-     		loginButton.addActionListener(new ActionListener() {
-        		public void actionPerformed(ActionEvent e) {
-        	     		userChecker();
-        	}
-        	
+        JPanel passInputField = new JPanel();
+        passInputField.add(new JLabel("Password:"));
+        passInputField.add(passField);
+
+        // Create a panel for the buttons
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new FlowLayout()); // Align buttons horizontally
+        buttonPanel.add(loginButton);
+        buttonPanel.add(signinButton);
+
+        // Create a panel for the title and input fields
+        JPanel contentPanel = new JPanel(new BorderLayout());
+        contentPanel.add(titleLabel, BorderLayout.NORTH); // Add title label to the top
+        contentPanel.add(userInputField, BorderLayout.CENTER); // Add username field to the center
+        contentPanel.add(passInputField, BorderLayout.SOUTH); // Add password field to the bottom
+
+        // Add components to the frame
+        add(contentPanel, BorderLayout.CENTER); // Add content panel to the center
+        add(buttonPanel, BorderLayout.SOUTH); // Add button panel to the bottom
+        pack();
+        // Add action listener for the login button
+        loginButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                userChecker();
+            }
         });
-	}
+    }
 
-	public void passwordChecker() {
-		if(password.equals(getPass())) {
-			//calls the Expense Insight App here
-		}
-	}
-	
-	public void userChecker() {
-		if(username.equals(getUser())) {
-			passwordChecker();
-		}
-	}
-	
-	public JTextField getPass() {
-		return pass;
-	}
-	
-	public void setPass(JTextField pass) {
-		this.pass = pass;
-	}
+    public void userChecker() {
+        String username = userField.getText(); // Get username from text field
+        String password = passField.getText(); // Get password from text field
 
-	public JTextField getUser() {
-		return user;
-	}
+        // Call login method from UserAccount
+        if (userAccount.login(username, password)) {
+            // If login is successful, proceed to the next step (e.g., open another window)
+            JOptionPane.showMessageDialog(this, "Login successful!");
+            // You can add code here to transition to the next part of your application
+        } else {
+            JOptionPane.showMessageDialog(this, "Invalid username or password.");
+        }
+    }
 
-	public void setUser(JTextField user) {
-		this.user = user;
-	}
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                new LoginUI().setVisible(true);
+            }
+        });
+    }
 }
