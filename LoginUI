@@ -56,6 +56,12 @@ public class LoginUI extends JFrame {
                 userChecker();
             }
         });
+        // add action listener for the signin button
+        signinButton.addActionListener(new ActionListener() {
+        	public void actionPerformed(ActionEvent e) {
+        		registerUser();
+        	}
+        });
     }
     // checks the user and password if it is in the database
     public void userChecker() {
@@ -66,9 +72,25 @@ public class LoginUI extends JFrame {
         if (userAccount.login(username, password)) {
             // If login is successful, proceed to the next step (e.g., open another window)
             JOptionPane.showMessageDialog(this, "Login successful!");
-            // You can add code here to transition to the next part of your application
+            //  add code here to transition to main app
         } else {
             JOptionPane.showMessageDialog(this, "Invalid username or password.");
+        }
+    }
+
+    // registers a new user into the database
+    public void registerUser() {
+    	String username = userField.getText();
+    	String password = passField.getText();
+    	
+    	// Call create account method in UserAccount
+        if (userAccount.createAccount(username, password)) {
+            JOptionPane.showMessageDialog(this, "Account created successfully!");
+            // Optionally, clear the text fields after registration
+            userField.setText("");
+            passField.setText("");
+        } else {
+            JOptionPane.showMessageDialog(this, "Username already exists. Please choose a different username.");
         }
     }
 
