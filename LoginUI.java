@@ -70,11 +70,17 @@ public class LoginUI extends JFrame {
 
         // Call login method from UserAccount
         if (userAccount.login(username, password)) {
-            // If login is successful, proceed to the next step (e.g., open another window)
-            JOptionPane.showMessageDialog(this, "Login successful!");
-            //  add code here to transition to main app
+            JOptionPane.showMessageDialog(frame, "Login successful!");
+            
+            // Create and show ExpenseInsight application
+            ExpenseInsight expenseInsightApp = new ExpenseInsight();
+            expenseInsightApp.setSize(800, 600); // Set the size of the ExpenseInsight frame
+            expenseInsightApp.setVisible(true); // Make it visible
+            
+            // Close the LoginUI frame
+            frame.dispose(); 
         } else {
-            JOptionPane.showMessageDialog(this, "Invalid username or password.");
+            JOptionPane.showMessageDialog(frame, "Invalid username or password.");
         }
     }
 
