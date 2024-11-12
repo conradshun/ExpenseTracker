@@ -6,16 +6,33 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Calendar;
 import javax.swing.border.Border;
+// holds the expenses
+class DayExpense {
+    private int expense;
+
+    public DayExpense() {
+        this.expense = 0;
+    }
+
+    public void addExpense(int amount) {
+        this.expense += amount;
+    }
+
+    public int getExpense() {
+        return this.expense;
+    }
+}
+
 
 public class ExpenseInsight extends JFrame {
 
     private static final long serialVersionUID = 1L;
 
-    private int INCOME = 0;
+    private int BUDGET = 0;
     private int EXPENSE = 0;
-    private int TOTAL = INCOME - EXPENSE;
+    private int TOTAL = BUDGET - EXPENSE;
 
-    private JLabel incomeLabel;
+    private JLabel budgetLabel;
     private JLabel expenseLabel;
     private JLabel totalLabel;
     private JLabel monthLabel;
@@ -29,19 +46,26 @@ public class ExpenseInsight extends JFrame {
 
     private int limit = 0;
     private Month month;
+    
+    private DayExpense[] dayExpenses;
 
     public ExpenseInsight() {
         setTitle("Expense Insight");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
+        
+        dayExpenses = new DayExpense[31]; // Assuming max 31 days in a month
+        for (int i = 0; i < dayExpenses.length; i++) {
+            dayExpenses[i] = new DayExpense();
+        }
 
         // Create and add the top panel for income, expense, and total
         JPanel topPanel = new JPanel(new FlowLayout()); // Use FlowLayout for better arrangement
         month = new Month(1);
         monthLabel = new JLabel(month.getMonthName());
-        incomeLabel = new JLabel("INCOME: " + INCOME);
+        budgetLabel = new JLabel("BUDGET: " + BUDGET);
         expenseLabel = new JLabel("EXPENSE: " + EXPENSE);
-        totalLabel = new JLabel("TOTAL: " + TOTAL);
+        totalLabel = new JLabel("BUDGET LEFT: " + TOTAL);
         
         // Add buttons for navigating months
         previousButton = new JButton("Previous");
@@ -49,43 +73,95 @@ public class ExpenseInsight extends JFrame {
         
         topPanel.add(previousButton);
         topPanel.add(monthLabel);
-        topPanel.add(incomeLabel);
+        topPanel.add(budgetLabel);
         topPanel.add(expenseLabel);
         topPanel.add(totalLabel);
         topPanel.add(nextButton); // Ensure next button is added to the panel
         add(topPanel, BorderLayout.NORTH);
 
-        // Create and add the left panel for buttons
-        JPanel leftPanel = new JPanel(new GridLayout(4, 1, 0, 10));
+     // Create and add the left panel for buttons
+        JPanel leftPanel = new JPanel(new GridLayout(5, 1, 0, 10)); // Changed to 5 rows to accommodate the new button
         JButton logoutButton = new JButton("LOGOUT");
         setLimitButton = new JButton("SET LIMIT");
         JButton addBudgetButton = new JButton("ADD BUDGET");
         JButton annualReportButton = new JButton("ANNUAL REPORT");
+        JButton addExpenseButton = new JButton("ADD EXPENSE");
         leftPanel.add(logoutButton);
         leftPanel.add(setLimitButton);
-        leftPanel.add(addBudgetButton);
+        leftPanel.add(addBudgetButton); // Add Budget button
         leftPanel.add(annualReportButton);
         add(leftPanel, BorderLayout.WEST);
-
+        
         // Create and add the calendar panel
         calendarPanel = new JPanel(new GridLayout(6, 7));
         dayButtons = new HashMap<>();
         createCalendar();
         add(calendarPanel, BorderLayout.CENTER);
-
-        // Set action listener for the Set Limit button
-        setLimitButton.addActionListener(new ActionListener() {
+        
+        // Action listener for the Add Budget button
+        addBudgetButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String input = JOptionPane.showInputDialog("Set your limit:");
+                String input = JOptionPane.showInputDialog("Enter budget amount:");
                 if (input != null) {
                     try {
-                        limit = Integer.parseInt(input);
-                        JOptionPane.showMessageDialog(null, "Limit set to: " + limit);
+                        int budgetAmount = Integer.parseInt(input);
+                        BUDGET += budgetAmount; // Add the input amount to the existing budget
+                        budgetLabel.setText("BUDGET: " + BUDGET); // Update the budget label
+                        TOTAL = BUDGET - EXPENSE; // Update total
+                        totalLabel.setText("TOTAL: " + TOTAL); // Update the total label
                     } catch (NumberFormatException ex) {
                         JOptionPane.showMessageDialog(null, "Invalid input. Please enter a number.");
                     }
                 }
+            }
+        });
+        
+        // set action listener for the adding expense button
+        addExpenseButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String input = JOptionPane.showInputDialog("Enter expense amount:");
+                if (input != null) {
+                    try {
+                        int expenseAmount = Integer.parseInt(input);
+                        addExpense(expenseAmount); // Call the method to add expense
+                    } catch (NumberFormatException ex) {
+                        JOptionPane.showMessageDialog(null, "Invalid input. Please enter a number.");
+                    }
+                }
+            }
+        });
+        
+     // Set action listener for the Set Limit button
+        setLimitButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (BUDGET == 0) {
+                    JOptionPane.showMessageDialog(null, "Please set a budget first before setting a limit.");
+                    return; // Exit if budget is 0
+                }
+                
+                String input;
+                int limitAmount;
+                do {
+                    input = JOptionPane.showInputDialog("Set your limit (must be less than or equal to current budget of " + BUDGET + "):");
+                    if (input == null) {
+                        return; // Exit if the dialog is closed
+                    }
+                    try {
+                        limitAmount = Integer.parseInt(input);
+                        if (limitAmount > BUDGET) {
+                            JOptionPane.showMessageDialog(null, "Limit must be less than or equal to your current budget.");
+                        } else {
+                            limit = limitAmount; // Set the limit if valid
+                            JOptionPane.showMessageDialog(null, "Limit set to: " + limit);
+                        }
+                    } catch (NumberFormatException ex) {
+                        JOptionPane.showMessageDialog(null, "Invalid input. Please enter a number.");
+                        limitAmount = -1; // Reset to trigger loop again
+                    }
+                } while (limitAmount > BUDGET || limitAmount < 0); // Repeat until valid limit is set
             }
         });
         
@@ -128,7 +204,7 @@ public class ExpenseInsight extends JFrame {
         dayButtons.clear(); // Clear the map
 
         // Add labels for the days of the week with boxes around them
-        String[] dayNames = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+        String[] dayNames = {"Sunday", "Monday", "Tueday", "Wedday", "Thursday", "Friday", "Saturday"};
         for (String dayName : dayNames) {
             JPanel dayPanel = new JPanel(); // Create a panel for each day name
             dayPanel.setLayout(new BorderLayout()); // Set layout to BorderLayout
@@ -171,8 +247,23 @@ public class ExpenseInsight extends JFrame {
             dayButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    // Handle day button click
-                    JOptionPane.showMessageDialog(null, "Selected day: " + finalDay + " " + month.getMonthName());
+                    // Show a dialog with the option to add an expense
+                    JPanel expensePanel = new JPanel();
+                    expensePanel.add(new JLabel("Enter expense for " + finalDay + " " + month.getMonthName() + ":"));
+                    
+                    JTextField expenseField = new JTextField(10);
+                    expensePanel.add(expenseField);
+                    
+                    int result = JOptionPane.showConfirmDialog(null, expensePanel, "Add Expense", JOptionPane.OK_CANCEL_OPTION);
+                    if (result == JOptionPane.OK_OPTION) {
+                        try {
+                            int expenseAmount = Integer.parseInt(expenseField.getText());
+                            dayExpenses[finalDay - 1].addExpense(expenseAmount); // Store expense for the day
+                            addExpense(expenseAmount); // Update total expenses
+                        } catch (NumberFormatException ex) {
+                            JOptionPane.showMessageDialog(null, "Invalid input. Please enter a number.");
+                        }
+                    }
                 }
             });
             dayButtons.put(day, dayButton);
@@ -187,7 +278,18 @@ public class ExpenseInsight extends JFrame {
         monthLabel.setText(month.getMonthName()); // Update the month label
     }
     
-    
+    private void addExpense(int amount) {
+        EXPENSE += amount; // Increase the total expenses
+        totalLabel.setText("TOTAL: " + (BUDGET - EXPENSE)); // Update the total label
+
+        // Check if the expenses exceed the limit
+        if (EXPENSE > limit) {
+            JOptionPane.showMessageDialog(null, "Warning: Your expenses have exceeded the limit of " + limit + "!");
+        }
+
+        // Update the expense label
+        expenseLabel.setText("EXPENSE: " + EXPENSE);
+    }
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
@@ -197,3 +299,4 @@ public class ExpenseInsight extends JFrame {
         });
     }
 }
+
