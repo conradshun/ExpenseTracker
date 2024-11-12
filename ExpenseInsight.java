@@ -1,10 +1,13 @@
 package polish;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Calendar;
+import javax.swing.border.Border;
 
 public class ExpenseInsight extends JFrame {
 
@@ -87,6 +90,17 @@ public class ExpenseInsight extends JFrame {
                 }
             }
         });
+        
+        logoutButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Create and show the LoginUI
+                LoginUI loginUI = new LoginUI();
+                loginUI.frame.setVisible(true);
+                // Close the ExpenseInsight frame
+                dispose(); // This will close the current ExpenseInsight frame
+            }
+        });
 
         // Action listener for the Previous button
         previousButton.addActionListener(new ActionListener() {
@@ -115,11 +129,47 @@ public class ExpenseInsight extends JFrame {
         calendarPanel.removeAll(); // Clear existing buttons
         dayButtons.clear(); // Clear the map
 
-        // Assuming a month with 30 days for simplicity; replace with actual days in month
+        // Add labels for the days of the week with boxes around them
+        String[] dayNames = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+        for (String dayName : dayNames) {
+            JPanel dayPanel = new JPanel(); // Create a panel for each day name
+            dayPanel.setLayout(new BorderLayout()); // Set layout to BorderLayout
+            
+            JLabel dayLabel = new JLabel(dayName, SwingConstants.CENTER); // Center align the text
+            dayPanel.add(dayLabel, BorderLayout.CENTER); // Add label to the center of the panel
+
+            // Create a border around the panel
+            Border border = BorderFactory.createLineBorder(Color.BLACK); // Black border
+            dayPanel.setBorder(border); // Set the border to the panel
+
+            calendarPanel.add(dayPanel); // Add the panel to the calendar panel
+        }
+
+        // Get the number of days in the month
         int daysInMonth = month.getDaysInMonth();
+        
+        // Get the first day of the month (1=Sunday, 2=Monday, ..., 7=Saturday)
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.MONTH, month.getMonthNumber() - 1); // Month is 0-indexed
+        calendar.set(Calendar.DAY_OF_MONTH, 1);
+        int firstDayOfWeek = calendar.get(Calendar.DAY_OF_WEEK); // 1=Sunday, 2=Monday, ..., 7=Saturday
+
+        // Adjust the first day of the week to start on Monday, fixing December issue
+        int adjustedFirstDay = (firstDayOfWeek == Calendar.SUNDAY) ? 6 : firstDayOfWeek - 2;
+        if (adjustedFirstDay < 0) {
+            adjustedFirstDay = 0; // Ensure adjustedFirstDay is not negative
+        }
+
+        // Add empty labels for days before the first day of the month
+        for (int i = 0; i < adjustedFirstDay; i++) {
+            JLabel emptyLabel = new JLabel(""); // Create an empty label
+            calendarPanel.add(emptyLabel); // Add it to the calendar panel
+        }
+
+        // Create buttons for each day of the month
         for (int day = 1; day <= daysInMonth; day++) {
             final int finalDay = day;
-            JButton dayButton = new JButton(String .valueOf(day));
+            JButton dayButton = new JButton(String.valueOf(day));
             dayButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -138,6 +188,8 @@ public class ExpenseInsight extends JFrame {
     private void updateMonthDisplay() {
         monthLabel.setText(month.getMonthName()); // Update the month label
     }
+    
+    
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
