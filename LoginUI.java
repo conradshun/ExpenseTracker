@@ -6,9 +6,9 @@ import java.awt.event.ActionListener;
 public class LoginUI extends JFrame{
 	private static final long serialVersionUID = 1L;
 	public JFrame frame;
-    private JTextField userField, passField;
-    private JButton loginButton, signinButton;
-    private UserAccount userAccount; // Instance of UserAccount to manage users
+  	private JTextField userField, passField;
+   	private JButton loginButton, signinButton;
+   	private UserAccount userAccount; // Instance of UserAccount to manage users
 
     /**
      * Launch the application.
