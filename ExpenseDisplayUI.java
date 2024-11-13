@@ -1,7 +1,7 @@
 import javax.swing.*;
 import java.awt.*;
 
-public class ExpenseInsightUI {
+public class ExpenseDisplayUI {
     public static void main(String[] args) {
 
         //KURT PLS DO YOUR MAGIC HERE HAHAHAHAH
