@@ -1,9 +1,11 @@
 import javax.swing.*;
 import java.awt.*;
 
-public class ExpenseTrackerUI {
+public class ExpenseInsightUI {
     public static void main(String[] args) {
-    	
+
+        //KURT PLS DO YOUR MAGIC HERE HAHAHAHAH
+        
     	//CONNECT TO THE MONTH CLASS or something...
         // Create the main frame
         JFrame frame = new JFrame("Friday, Jan 13 2023");
