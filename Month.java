@@ -21,6 +21,10 @@ class Month {
         return monthNames[monthNumber - 1];
     }
 
+    public int getMonthNumber() {
+        return monthNumber;
+    }
+
     public int getDaysInMonth() {
         // Return the number of days in the month
         switch (monthNumber) {
