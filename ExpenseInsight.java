@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Calendar;
 import javax.swing.border.Border;
+
 // holds the expenses
 class DayExpense {
     private int expense;
@@ -50,9 +51,10 @@ public class ExpenseInsight extends JFrame {
     private DayExpense[] dayExpenses;
 
     public ExpenseInsight() {
+    	setBackground(new Color(0, 0, 64));
         setTitle("Expense Insight");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLayout(new BorderLayout());
+        getContentPane().setLayout(new BorderLayout());
         
         dayExpenses = new DayExpense[31]; // Assuming max 31 days in a month
         for (int i = 0; i < dayExpenses.length; i++) {
@@ -61,15 +63,23 @@ public class ExpenseInsight extends JFrame {
 
         // Create and add the top panel for income, expense, and total
         JPanel topPanel = new JPanel(new FlowLayout()); // Use FlowLayout for better arrangement
+        topPanel.setBackground(new Color(0, 0, 64));
         month = new Month(1);
         monthLabel = new JLabel(month.getMonthName());
+        monthLabel.setForeground(new Color(255, 255, 255));
+        monthLabel.setBackground(new Color(255, 255, 255));
         budgetLabel = new JLabel("BUDGET: " + BUDGET);
+        budgetLabel.setForeground(new Color(255, 255, 255));
         expenseLabel = new JLabel("EXPENSE: " + EXPENSE);
+        expenseLabel.setForeground(new Color(255, 255, 255));
         totalLabel = new JLabel("BUDGET LEFT: " + TOTAL);
+        totalLabel.setForeground(new Color(255, 255, 255));
         
         // Add buttons for navigating months
         previousButton = new JButton("Previous");
+        previousButton.setBackground(new Color(0, 255, 255));
         nextButton = new JButton("Next");
+        nextButton.setBackground(new Color(0, 255, 255));
         
         topPanel.add(previousButton);
         topPanel.add(monthLabel);
@@ -77,26 +87,32 @@ public class ExpenseInsight extends JFrame {
         topPanel.add(expenseLabel);
         topPanel.add(totalLabel);
         topPanel.add(nextButton); // Ensure next button is added to the panel
-        add(topPanel, BorderLayout.NORTH);
+        getContentPane().add(topPanel, BorderLayout.NORTH);
 
      // Create and add the left panel for buttons
         JPanel leftPanel = new JPanel(new GridLayout(5, 1, 0, 10)); // Changed to 5 rows to accommodate the new button
+        leftPanel.setBackground(new Color(0, 0, 64));
         JButton logoutButton = new JButton("LOGOUT");
+        logoutButton.setBackground(new Color(0, 255, 255));
         setLimitButton = new JButton("SET LIMIT");
+        setLimitButton.setBackground(new Color(0, 255, 255));
         JButton addBudgetButton = new JButton("ADD BUDGET");
+        addBudgetButton.setBackground(new Color(0, 255, 255));
         JButton annualReportButton = new JButton("ANNUAL REPORT");
+        annualReportButton.setBackground(new Color(0, 255, 255));
         JButton addExpenseButton = new JButton("ADD EXPENSE");
         leftPanel.add(logoutButton);
         leftPanel.add(setLimitButton);
         leftPanel.add(addBudgetButton); // Add Budget button
         leftPanel.add(annualReportButton);
-        add(leftPanel, BorderLayout.WEST);
+        getContentPane().add(leftPanel, BorderLayout.WEST);
         
         // Create and add the calendar panel
         calendarPanel = new JPanel(new GridLayout(6, 7));
+        calendarPanel.setBackground(new Color(0, 0, 64));
         dayButtons = new HashMap<>();
         createCalendar();
-        add(calendarPanel, BorderLayout.CENTER);
+        getContentPane().add(calendarPanel, BorderLayout.CENTER);
         
         // Action listener for the Add Budget button
         addBudgetButton.addActionListener(new ActionListener() {
@@ -229,7 +245,7 @@ public class ExpenseInsight extends JFrame {
         int firstDayOfWeek = calendar.get(Calendar.DAY_OF_WEEK); // 1=Sunday, 2=Monday, ..., 7=Saturday
 
         // Adjust the first day of the week to start on Monday, fixing December issue
-        int adjustedFirstDay = (firstDayOfWeek == Calendar.SUNDAY) ? 6 : firstDayOfWeek - 2;
+        int adjustedFirstDay = (firstDayOfWeek == Calendar.MONDAY) ? 1 : firstDayOfWeek - 2;
         if (adjustedFirstDay < 0) {
             adjustedFirstDay = 0; // Ensure adjustedFirstDay is not negative
         }
