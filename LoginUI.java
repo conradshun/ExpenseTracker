@@ -6,9 +6,9 @@ import java.awt.event.ActionListener;
 public class LoginUI extends JFrame{
 	private static final long serialVersionUID = 1L;
 	public JFrame frame;
-  	private JTextField userField, passField;
-   	private JButton loginButton, signinButton;
-   	private UserAccount userAccount; // Instance of UserAccount to manage users
+    private JTextField userField, passField;
+    private JButton loginButton, signinButton;
+    private UserAccount userAccount; // Instance of UserAccount to manage users
 
     /**
      * Launch the application.
@@ -39,6 +39,7 @@ public class LoginUI extends JFrame{
      */
     private void initialize() {
         frame = new JFrame();
+        frame.setBackground(new Color(0, 0, 160));
         frame.setTitle("Expense Insight");
         frame.setBounds(100, 100, 350, 300);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -46,21 +47,28 @@ public class LoginUI extends JFrame{
 
         // Create a label for the title and set a large font
         JLabel titleLabel = new JLabel("EXPENSE INSIGHT");
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 24)); // Set font size and style
+        titleLabel.setBackground(new Color(0, 0, 160));
+        titleLabel.setFont(new Font("Sitka Display", Font.BOLD | Font.ITALIC, 24)); // Set font size and style
         titleLabel.setHorizontalAlignment(SwingConstants.CENTER); // Center the label
 
         // Initialize buttons and text fields
         loginButton = new JButton("Log In");
+        loginButton.setBackground(new Color(0, 255, 255));
         signinButton = new JButton("Sign In");
+        signinButton.setBackground(new Color(0, 255, 255));
         userField = new JTextField(20); // Set width of text field
 
         // Use GridLayout for aligning labels and text fields
         JPanel userInputField = new JPanel(); 
-        userInputField.add(new JLabel("Username:"));
+        userInputField.setBackground(new Color(0, 0, 160));
+        JLabel label = new JLabel("Username:");
+        label.setForeground(new Color(255, 255, 255));
+        userInputField.add(label);
         userInputField.add(userField);
 
         // Create a panel for the buttons
         JPanel buttonPanel = new JPanel();
+        buttonPanel.setBackground(new Color(0, 0, 160));
         buttonPanel.setLayout(new FlowLayout()); // Align buttons horizontally
         buttonPanel.add(loginButton);
         buttonPanel.add(signinButton);
@@ -72,8 +80,11 @@ public class LoginUI extends JFrame{
         passField = new JTextField(20); // Set width of text field
         
         JPanel passInputField = new JPanel();
+        passInputField.setBackground(new Color(0, 0, 160));
         userInputField.add(passInputField);
-        passInputField.add(new JLabel("Password:"));
+        JLabel label_1 = new JLabel("Password:");
+        label_1.setForeground(new Color(255, 255, 255));
+        passInputField.add(label_1);
         passInputField.add(passField);
 
         // Add components to the frame
