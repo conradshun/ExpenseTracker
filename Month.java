@@ -33,7 +33,7 @@ class Month {
             case 4: case 6: case 9: case 11: // 30 days
                 return 30;
             case 2: // February (assuming non-leap year for simplicity)
-                return 28;
+                return 29;
             default:
                 return 30; // Default case (should not happen)
         }
