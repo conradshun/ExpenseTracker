@@ -1,61 +1,92 @@
-import java.util.HashMap;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public class UserAccount {
-    private User currentUser;
-    private boolean isLoggedIn;
-
-    // Static storage for user accounts (simulates a database)
-    private static HashMap<String, User> userDatabase = new HashMap<>();
+    private int id;
+    private String username;
+    private String password;
 
     // Constructor
-    public UserAccount() {
-        this.isLoggedIn = false;
+    public UserAccount(String username, String password) {
+        this.username = username;
+        this.password = password;
     }
 
-    // Method to create a new account
-    public boolean createAccount(String username, String password) {
-        if (userDatabase.containsKey(username)) {
-            System.out.println("Username already exists.");
-            return false;
-        }
-        User newUser = new User(username, password);
-        userDatabase.put(username, newUser);
-        System.out.println("Account created successfully.");
-        return true;
-    }
-
-    // Method for user login
-    public boolean login(String username, String password) {
-        User user = userDatabase.get(username);
-        if (user != null && user.getPassword().equals(password)) {
-            this.currentUser = user;
-            this.isLoggedIn = true;
-            System.out.println("Login successful.");
+    // Save a new user to the database
+    public boolean save() {
+        String query = "INSERT INTO UserAccount (username, password) VALUES (?, ?)";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, username);
+            stmt.setString(2, password);
+            stmt.executeUpdate();
             return true;
-        } else {
-            System.out.println("Invalid username or password.");
+        } catch (SQLException e) {
+            e.printStackTrace();
             return false;
         }
     }
 
-    // Method for user logout
-    public void logout() {
-        if (isLoggedIn) {
-            this.currentUser = null;
-            this.isLoggedIn = false;
-            System.out.println("Logged out successfully.");
-        } else {
-            System.out.println("No user is currently logged in.");
+    // Authenticate a user
+    public static boolean authenticate(String username, String password) {
+        String query = "SELECT * FROM UserAccount WHERE username = ? AND password = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, username);
+            stmt.setString(2, password);
+            ResultSet rs = stmt.executeQuery();
+            return rs.next(); // Returns true if a matching record is found
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
         }
     }
 
-    // Getter for login status
-    public boolean isLoggedIn() {
-        return isLoggedIn;
+    // Update the password of a user
+    public boolean updatePassword(String newPassword) {
+        String query = "UPDATE UserAccount SET password = ? WHERE username = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, newPassword);
+            stmt.setString(2, username);
+            int rowsUpdated = stmt.executeUpdate();
+            if (rowsUpdated > 0) {
+                this.password = newPassword;
+                return true;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
-    // Getter for current user's username
-    public String getCurrentUsername() {
-        return (isLoggedIn && currentUser != null) ? currentUser.getUsername() : null;
+    // Delete a user account
+    public static boolean deleteAccount(String username) {
+        String query = "DELETE FROM UserAccount WHERE username = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, username);
+            int rowsDeleted = stmt.executeUpdate();
+            return rowsDeleted > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    // Check if a username already exists
+    public static boolean usernameExists(String username) {
+        String query = "SELECT * FROM UserAccount WHERE username = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, username);
+            ResultSet rs = stmt.executeQuery();
+            return rs.next();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 }
