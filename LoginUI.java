@@ -3,107 +3,157 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-/**
- * A simple login interface integrated with the UserAccount system for authentication.
- */
-public class LoginUI extends JFrame {
-    private JTextField usernameField;
-    private JPasswordField passwordField;
+public class LoginUI extends JFrame{
+    private static final long serialVersionUID = 1L;
+    public JFrame frame;
+    private JTextField userField;
+    private JPasswordField passField; // Change to JPasswordField
+    private JButton loginButton, signinButton;
+    private UserAccount userAccount; // Instance of UserAccount to manage users
 
+    /**
+     * Launch the application.
+     */
+    public static void main(String[] args) {
+        EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                try {
+                    LoginUI window = new LoginUI();
+                    window.frame.setVisible(true);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
+    /**
+     * Create the application.
+     */
     public LoginUI() {
-        // Set up the frame
-        setTitle("Login");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(400, 250);
-        setLayout(new BorderLayout());
+        userAccount = new UserAccount(); // Initialize UserAccount
+        initialize();
+        frame.setVisible(true); 
+    }
 
-        // Create UI components
-        JPanel inputPanel = new JPanel(new GridLayout(3, 2, 10, 10));
-        JLabel usernameLabel = new JLabel("Username:");
-        usernameField = new JTextField();
-        JLabel passwordLabel = new JLabel("Password:");
-        passwordField = new JPasswordField();
+    /**
+     * Initialize the contents of the frame.
+     */
+    private void initialize() {
+        frame = new JFrame();
+        frame.setBackground(new Color(0, 0, 160));
+        frame.setTitle("Expense Insight");
+        frame.setBounds(100, 100, 350, 300);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.getContentPane().setLayout(new BorderLayout());
 
-        JButton loginButton = new JButton("Login");
-        JButton signUpButton = new JButton("Sign Up");
+        // Create a label for the title and set a large font
+        JLabel titleLabel = new JLabel("EXPENSE INSIGHT");
+        titleLabel.setBackground(new Color(0, 0, 160));
+        titleLabel.setFont(new Font("Sitka Display", Font.BOLD | Font.ITALIC, 24)); // Set font size and style
+        titleLabel.setHorizontalAlignment(SwingConstants.CENTER); // Center the label
 
-        inputPanel.add(usernameLabel);
-        inputPanel.add(usernameField);
-        inputPanel.add(passwordLabel);
-        inputPanel.add(passwordField);
+        // Initialize buttons and text fields
+        loginButton = new JButton("Log In");
+        loginButton.setBackground(new Color(173, 216, 230));
+        signinButton = new JButton("Sign In");
+        signinButton.setBackground(new Color(176, 224, 230));
+        userField = new JTextField(20); // Set width of text field
 
-        // Add buttons to the panel
+        // Use GridLayout for aligning labels and text fields
+        JPanel userInputField = new JPanel(); 
+        userInputField.setBackground(new Color(0, 128, 128));
+        JLabel label = new JLabel("Username:");
+        label.setForeground(new Color(255, 255, 255));
+        userInputField.add(label);
+        userInputField.add(userField);
+
+        // Create a panel for the buttons
         JPanel buttonPanel = new JPanel();
+        buttonPanel.setBackground(new Color(0, 128, 128));
+        buttonPanel.setLayout(new FlowLayout()); // Align buttons horizontally
         buttonPanel.add(loginButton);
-        buttonPanel.add(signUpButton);
+        buttonPanel.add(signinButton);
+
+        // Create a panel for the title and input fields
+        JPanel contentPanel = new JPanel(new BorderLayout());
+        contentPanel.add(titleLabel, BorderLayout.NORTH); // Add title label to the top
+        contentPanel.add(userInputField, BorderLayout.CENTER);
+        
+        passField = new JPasswordField(20); // Change to JPasswordField
+        
+        JPanel passInputField = new JPanel();
+        passInputField.setBackground(new Color(0, 128, 128));
+        userInputField.add(passInputField);
+        JLabel label_1 = new JLabel("Password:");
+        label_1.setForeground(new Color(255, 255, 255));
+        passInputField.add(label_1);
+        passInputField.add(passField);
 
         // Add components to the frame
-        add(inputPanel, BorderLayout.CENTER);
-        add(buttonPanel, BorderLayout.SOUTH);
+        frame.getContentPane().add(contentPanel, BorderLayout.CENTER);
+        frame.getContentPane().add(buttonPanel, BorderLayout.SOUTH); // Add button panel to the bottom
 
-        // Add action listeners
-        loginButton.addActionListener(new LoginAction());
-        signUpButton.addActionListener(new SignUpAction());
-
-        // Display the frame
-        setLocationRelativeTo(null);
-        setVisible(true);
+        // Add action listener for the login button
+        loginButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                userChecker();
+            }
+        });
+        
+        signinButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                registerUser  ();
+            }
+        });
     }
 
-    /**
-     * ActionListener for the login button.
-     */
-    private class LoginAction implements ActionListener {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            String username = usernameField.getText();
-            String password = new String(passwordField.getPassword());
+    // checks the username and password if it is in the database
+    public void userChecker() {
+        String username = userField.getText().trim(); // Get username and trim whitespace
+        String password = new String(passField.getPassword()).trim(); // Get password from JPasswordField
 
-            // Authenticate the user
-            if (UserAccount.authenticate(username, password)) {
-                JOptionPane.showMessageDialog(LoginUI.this, "Login successful!");
-                // Proceed to the next screen or application dashboard
-            } else {
-                JOptionPane.showMessageDialog(LoginUI.this, "Invalid username or password.", "Login Failed", JOptionPane.ERROR_MESSAGE);
-            }
+        // Check for empty fields
+        if (username.isEmpty() || password.isEmpty()) {
+            JOptionPane.showMessageDialog(frame, "Username and password cannot be blank.");
+            return; // Exit the method if validation fails
+        }
+
+        // Call login method from UserAccount
+        if (UserAccount.authenticate(username, password)) {
+            JOptionPane.showMessageDialog(frame, "Login successful!");
+            
+            // Create and show ExpenseInsight application
+            ExpenseInsight expenseInsightApp = new ExpenseInsight();
+            expenseInsightApp.setSize(800, 600); // Set the size of the ExpenseInsight frame
+            expenseInsightApp.setVisible(true); // Make it visible
+            
+            // Close the LoginUI frame
+            frame.dispose(); 
+        } else {
+            JOptionPane.showMessageDialog(frame, "Invalid username or password.");
         }
     }
 
-    /**
-     * ActionListener for the sign-up button.
-     */
-    private class SignUpAction implements ActionListener {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            String username = JOptionPane.showInputDialog(LoginUI.this, "Enter a new username:");
-            if (username == null || username.trim().isEmpty()) {
-                JOptionPane.showMessageDialog(LoginUI.this, "Username cannot be empty.");
-                return;
-            }
-
-            if (UserAccount.usernameExists(username)) {
-                JOptionPane.showMessageDialog(LoginUI.this, "Username already exists. Please choose another one.");
-                return;
-            }
-
-            String password = JOptionPane.showInputDialog(LoginUI.this, "Enter a new password:");
-            if (password == null || password.trim().isEmpty()) {
-                JOptionPane.showMessageDialog(LoginUI.this, "Password cannot be empty.");
-                return;
-            }
-
-            // Save the new user account
-            UserAccount newUser = new UserAccount(username, password);
-            if (newUser.save()) {
-                JOptionPane.showMessageDialog(LoginUI.this, "Account created successfully! You can now log in.");
-            } else {
-                JOptionPane.showMessageDialog(LoginUI.this, "Failed to create account. Please try again.", "Error", JOptionPane.ERROR_MESSAGE);
-            }
+    // registers a new user into the database
+    public void registerUser () {
+        String username = userField.getText().trim(); // Get username and trim whitespace
+        String password = new String(passField.getPassword()).trim(); // Get password from JPasswordField
+        
+        // Check for empty fields
+        if (username.isEmpty() || password.isEmpty()) {
+            JOptionPane.showMessageDialog(frame, "Username and password cannot be blank.");
+            return; // Exit the method if validation fails
         }
-    }
 
-    public static void main(String[] args) {
-        // Launch the login interface
-        SwingUtilities.invokeLater(LoginUI::new);
+        // Call create account method in UserAccount
+        if (userAccount.save(username, password)) {
+            JOptionPane.showMessageDialog(frame, "Account created successfully !");
+            // Optionally, clear the text fields after registration
+            userField.setText("");
+            passField.setText("");
+        } else {
+            JOptionPane.showMessageDialog(frame, "Username already exists. Please choose a different username.");
+        }
     }
 }
