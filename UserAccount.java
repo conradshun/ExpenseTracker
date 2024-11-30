@@ -28,6 +28,11 @@ public class UserAccount {
         this.username = username;
         this.password = password;
     }
+    
+    public UserAccount() {
+    	this.username = null;
+    	this.password = null;
+    }
 
     /**
      * Establishes a connection to the database.
@@ -44,7 +49,7 @@ public class UserAccount {
      *
      * @return true if the user was saved successfully, false otherwise.
      */
-    public boolean save() {
+    public boolean save(String username, String password) {
         String query = "INSERT INTO UserAccount (username, password) VALUES (?, ?)";
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
