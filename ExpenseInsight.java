@@ -236,12 +236,12 @@ public class ExpenseInsight extends JFrame {
             JOptionPane.showMessageDialog(this, "Error loading expenses: " + e.getMessage());
         }
     }
-
-    private void updateCalendar() {
+    // creates the calendar
+   private void updateCalendar() {
         // Clear the calendar panel
         calendarPanel.removeAll();
 
-        // Add day labels again
+        // Add day labels
         String[] dayNames = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
         Border border = BorderFactory.createLineBorder(Color.WHITE);
 
@@ -254,10 +254,11 @@ public class ExpenseInsight extends JFrame {
             calendarPanel.add(dayLabel);
         }
 
-        // Calculate the first day of the month for the current month and year (2024)
+        // Calculate the first day of the month for the current month and year
         Calendar calendar = Calendar.getInstance();
         calendar.set(2024, month.getMonthNumber() - 1, 1); // Set to the first day of the month
         int firstDayOfWeek = calendar.get(Calendar.DAY_OF_WEEK); // 1 = Sunday, 2 = Monday, ..., 7 = Saturday
+        int daysInMonth = month.getDaysInMonth(); // Get the number of days in the month
 
         // Add empty labels for days before the first day of the month
         for (int i = 1; i < firstDayOfWeek; i++) {
@@ -265,7 +266,7 @@ public class ExpenseInsight extends JFrame {
         }
 
         // Add buttons for each day of the month
-        for (int i = 1; i <= month.getDaysInMonth(); i++) {
+        for (int i = 1; i <= daysInMonth; i++) {
             JButton dayButton = new JButton(String.valueOf(i));
             int day = i;
             dayButton.setBackground(new Color(173, 216, 230));
@@ -280,10 +281,6 @@ public class ExpenseInsight extends JFrame {
             dayButtons.put(i, dayButton);
             calendarPanel.add(dayButton);
         }
-
-        calendarPanel.revalidate(); // Refresh the calendar panel
-        calendarPanel.repaint(); // Repaint the calendar panel to show updates
-    }
 
     void addExpense(String category, int amount, int day) {
         if (amount <= 0) {
