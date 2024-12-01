@@ -8,6 +8,7 @@ public class DayDisplayUI extends JDialog {
     private JTextField categoryField;
     private JPanel expenseDisplayPanel;
 
+    
     public DayDisplayUI(Frame parent, int day, Map<String, Integer> expenses) {
         super(parent, "Expense for " + day, true);
         setSize(400, 300);
@@ -37,6 +38,7 @@ public class DayDisplayUI extends JDialog {
 
         // Category input
         JLabel categoryLabel = new JLabel("CATEGORY:");
+        categoryLabel.setForeground(new Color(0, 0, 0));
         categoryLabel.setBackground(new Color(0, 128, 128));
         categoryField = new JTextField();
         inputPanel.add(categoryLabel);
@@ -60,6 +62,7 @@ public class DayDisplayUI extends JDialog {
                         updateExpenseDisplay(((ExpenseInsight) parent).getDayExpenses()[day - 1].getExpenses()); // Update displayed expenses
                         expenseField.setText(""); // Clear the input field
                         categoryField.setText(""); // Clear the input field
+                        dispose();
                     } else {
                         JOptionPane.showMessageDialog(this, "Expense must be greater than zero.");
                     }
@@ -71,8 +74,10 @@ public class DayDisplayUI extends JDialog {
             }
         });
         getContentPane().add(saveButton);
+        dispose();
     }
 
+    
     private void updateExpenseDisplay(Map<String, Integer> expenses) {
         expenseDisplayPanel.removeAll(); // Clear existing labels
         if (expenses != null && !expenses.isEmpty()) {
