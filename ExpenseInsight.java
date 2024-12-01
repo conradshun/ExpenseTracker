@@ -113,7 +113,7 @@ public class ExpenseInsight extends JFrame {
         getContentPane().add(leftPanel, BorderLayout.WEST);
 
         // Create and add the calendar panel
-        calendarPanel = new JPanel(new GridLayout(6, 7)); // Changed to 6 rows and 7 columns for day labels
+        calendarPanel = new JPanel(new GridLayout(0, 7)); // 7 columns // finally fixed this thing
         calendarPanel.setBackground(new Color(0, 128, 128));
         dayButtons = new HashMap<>();
 
