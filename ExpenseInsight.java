@@ -2,12 +2,13 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Calendar;
 import javax.swing.border.Border;
 
-// Holds the expenses
+// Holds the expenses for a specific day
 class DayExpense {
     private Map<String, Integer> expenses;
 
@@ -49,7 +50,13 @@ public class ExpenseInsight extends JFrame {
 
     private DayExpense[] dayExpenses;
 
+    // Instance of ExpenseTracker to manage expenses
+    private ExpenseTracker expenseTracker;
+
     public ExpenseInsight() {
+        // Initialize ExpenseTracker with the database URL
+        expenseTracker = new ExpenseTracker("jdbc:mysql://localhost:3306/expense_tracker");
+
         setBackground(new Color(0, 0, 64));
         setTitle("Expense Insight");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -64,7 +71,8 @@ public class ExpenseInsight extends JFrame {
         JPanel topPanel = new JPanel(new FlowLayout()); // Use FlowLayout for better arrangement
         topPanel.setBackground(new Color(0, 128, 128));
         month = new Month(1);
-        monthLabel = new JLabel(month.getMonthName()); monthLabel.setForeground(new Color(255, 255, 255));
+        monthLabel = new JLabel(month.getMonthName());
+        monthLabel.setForeground(new Color(255, 255, 255));
         budgetLabel = new JLabel("BUDGET: " + BUDGET);
         budgetLabel.setForeground(new Color(255, 255, 255));
         expenseLabel = new JLabel("EXPENSE: " + EXPENSE);
@@ -135,8 +143,16 @@ public class ExpenseInsight extends JFrame {
             month.next();
             updateMonthDisplay();
         });
+        
+        logoutButton.addActionListener(e -> {
+            // Dispose of the current ExpenseInsight frame
+            this.dispose();
+            // Open the LoginUI
+            LoginUI loginUI = new LoginUI(); // Create the LoginUI instance
+            loginUI.setVisible(true); // Set it to be visible
+        });
 
-        // Set up action listener for adding budget
+     // Set up action listener for adding budget
         addBudgetButton.addActionListener(e -> {
             String budgetInput = JOptionPane.showInputDialog("Enter your budget:");
             if (budgetInput != null) {
@@ -145,6 +161,18 @@ public class ExpenseInsight extends JFrame {
                     TOTAL = BUDGET - EXPENSE;
                     budgetLabel.setText("BUDGET: " + BUDGET);
                     totalLabel.setText("BUDGET LEFT: " + TOTAL);
+                    
+                    // Set the budget for the current month and year
+                    int currentYear = Calendar.getInstance().get(Calendar.YEAR);
+                    String monthKey = currentYear + "-" + String.format("%02d", month.getMonthNumber()); // Format as "YYYY-MM"
+                    
+                    // Wrap the setBudget call in a try-catch block to handle SQLException
+                    try {
+                        expenseTracker.setBudget(monthKey, BUDGET); // Update budget in ExpenseTracker
+                    } catch (SQLException ex) {
+                        JOptionPane.showMessageDialog(this, "Error updating budget: " + ex.getMessage());
+                    }
+                    
                 } catch (NumberFormatException ex) {
                     JOptionPane.showMessageDialog(this, "Invalid budget amount. Please enter a number.");
                 }
@@ -168,9 +196,41 @@ public class ExpenseInsight extends JFrame {
         setVisible(true);
     }
 
- private void updateMonthDisplay() {
+    private void updateMonthDisplay() {
         monthLabel.setText(month.getMonthName());
         updateCalendar(); // Update the calendar display for the new month
+        loadExpensesForCurrentMonth(); // Load expenses for the current month
+    }
+
+    private void loadExpensesForCurrentMonth() {
+        // Load expenses from ExpenseTracker for the current month
+        try {
+            EXPENSE = expenseTracker.getTotal(month.getMonthName());
+            expenseLabel.setText("EXPENSE: " + EXPENSE);
+            TOTAL = BUDGET - EXPENSE;
+            totalLabel.setText("BUDGET LEFT: " + TOTAL);
+            
+            dayExpenses = new DayExpense[month.getDaysInMonth()]; // Reset for the new month
+            for (int i = 0; i < dayExpenses.length; i++) {
+                dayExpenses[i] = new DayExpense();
+            }
+            
+            // Assuming getExpenses returns a Map<String, Integer>
+            Map<String, Integer> expenses = expenseTracker.getExpenses(month.getMonthName());
+            for (Map.Entry<String, Integer> entry : expenses.entrySet()) {
+                // Split the key to get day and category
+                String[] parts = entry.getKey().split("-");
+                if (parts.length == 2) {
+                    int day = Integer.parseInt(parts[0]); // Get the day
+                    String category = parts[1]; // Get the category
+
+                    // Add the expense to the corresponding day
+                    dayExpenses[day - 1].addExpense(category, entry.getValue());
+                }
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Error loading expenses: " + e.getMessage());
+        }
     }
 
     private void updateCalendar() {
@@ -185,7 +245,7 @@ public class ExpenseInsight extends JFrame {
             JLabel dayLabel = new JLabel(dayName, SwingConstants.CENTER);
             dayLabel.setBorder(border);
             dayLabel.setForeground(Color.BLACK);
-            dayLabel.setBackground(new Color(255, 215, 0));// gold
+            dayLabel.setBackground(new Color(255, 215, 0)); // gold
             dayLabel.setOpaque(true);
             calendarPanel.add(dayLabel);
         }
@@ -239,6 +299,13 @@ public class ExpenseInsight extends JFrame {
         // Update the expense label
         expenseLabel.setText("EXPENSE: " + EXPENSE);
         
+        // Add the expense to the ExpenseTracker
+        try {
+            expenseTracker.addExpense(month.getMonthName(), category, amount);
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Error adding expense: " + e.getMessage());
+        }
+
         // Update the displayed expenses in the DayDisplayUI (assuming you have a reference to it)
         DayDisplayUI dayDisplay = new DayDisplayUI(this, day, dayExpenses[day - 1].getExpenses());
         dayDisplay.setVisible(true);
