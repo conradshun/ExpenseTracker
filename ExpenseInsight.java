@@ -133,6 +133,10 @@ public class ExpenseInsight extends JFrame {
         updateCalendar(); // Initial calendar setup
         getContentPane().add(calendarPanel, BorderLayout.CENTER);
 
+        annualReportButton.addActionListener(e -> {
+        	// call annual report
+        });
+        
         // Set up action listeners for navigation buttons
         previousButton.addActionListener(e -> {
             month.previous();
