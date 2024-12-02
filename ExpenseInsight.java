@@ -134,7 +134,7 @@ public class ExpenseInsight extends JFrame {
         getContentPane().add(calendarPanel, BorderLayout.CENTER);
 
         annualReportButton.addActionListener(e -> {
-        	// call annual report
+        	showBarGraph();
         });
         
         // Set up action listeners for navigation buttons
@@ -310,6 +310,36 @@ public class ExpenseInsight extends JFrame {
         // Update the displayed expenses in the DayDisplayUI (assuming you have a reference to it)
         DayDisplayUI dayDisplay = new DayDisplayUI(this, day, dayExpenses[day - 1].getExpenses());
         dayDisplay.setVisible(true);
+    }
+
+    // Method to show the bar graph
+    private void showBarGraph() {
+    // Create a new BarGraph instance
+        BarGraph barGraph = new BarGraph();
+
+    // Load expenses data from the ExpenseTracker
+        try {
+            // Assuming you want to show the total expenses for each category for the current month
+            Map<String, Integer> expenses = expenseTracker.getExpenses(month.getMonthName());
+        
+            // Populate the bar graph model with expenses
+            for (Map.Entry<String, Integer> entry : expenses.entrySet()) {
+                BarGraphModel.BarItem item = new BarGraphModel.BarItem(entry.getKey());
+                item.percentage = (entry.getValue() * 100) / BUDGET; // Calculate percentage based on budget
+                barGraph.getModel().addItem(item);
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Error loading expenses for bar graph: " + e.getMessage());
+        return;
+    }
+
+    // Create a new frame to display the bar graph
+    JFrame barGraphFrame = new JFrame("Bar Graph of Expenses");
+    barGraphFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+    barGraphFrame.setSize(800, 600);
+    barGraphFrame.setLocationRelativeTo(null);
+    barGraphFrame.getContentPane().add(new BarGraphApp(barGraph)); // Pass the bar graph to the app
+    barGraphFrame.setVisible(true);
     }
 
     public DayExpense[] getDayExpenses() {
