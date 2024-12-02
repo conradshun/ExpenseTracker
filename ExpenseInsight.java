@@ -1,3 +1,5 @@
+package polish;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -113,7 +115,7 @@ public class ExpenseInsight extends JFrame {
         getContentPane().add(leftPanel, BorderLayout.WEST);
 
         // Create and add the calendar panel
-        calendarPanel = new JPanel(new GridLayout(0, 7)); // 7 columns // finally fixed this thing
+        calendarPanel = new JPanel(new GridLayout(0, 7)); // Changed to 6 rows and 7 columns for day labels
         calendarPanel.setBackground(new Color(0, 128, 128));
         dayButtons = new HashMap<>();
 
@@ -133,10 +135,6 @@ public class ExpenseInsight extends JFrame {
         updateCalendar(); // Initial calendar setup
         getContentPane().add(calendarPanel, BorderLayout.CENTER);
 
-        annualReportButton.addActionListener(e -> {
-        	showBarGraph();
-        });
-        
         // Set up action listeners for navigation buttons
         previousButton.addActionListener(e -> {
             month.previous();
@@ -146,6 +144,10 @@ public class ExpenseInsight extends JFrame {
         nextButton.addActionListener(e -> {
             month.next();
             updateMonthDisplay();
+        });
+        
+        annualReportButton.addActionListener(e -> {
+        	// call annual report
         });
         
         logoutButton.addActionListener(e -> {
@@ -236,8 +238,8 @@ public class ExpenseInsight extends JFrame {
             JOptionPane.showMessageDialog(this, "Error loading expenses: " + e.getMessage());
         }
     }
-    // creates the calendar
-   private void updateCalendar() {
+
+    private void updateCalendar() {
         // Clear the calendar panel
         calendarPanel.removeAll();
 
@@ -282,6 +284,19 @@ public class ExpenseInsight extends JFrame {
             calendarPanel.add(dayButton);
         }
 
+        // Calculate how many empty cells to add to fill the last row
+        int totalCells = firstDayOfWeek + daysInMonth;
+        int emptyCells = (totalCells % 7 == 0) ? 0 : (7 - (totalCells % 7)); // Calculate how many empty cells to add
+
+        // Add empty labels to fill the last row if necessary
+        for (int i = 0; i < emptyCells; i++) {
+            calendarPanel.add(new JLabel("")); // Add empty labels to fill the last row
+        }
+
+        calendarPanel.revalidate(); // Refresh the calendar panel
+        calendarPanel.repaint(); // Repaint the calendar panel to show updates
+    }
+
     void addExpense(String category, int amount, int day) {
         if (amount <= 0) {
             JOptionPane.showMessageDialog(null, "Expense amount must be greater than zero.");
@@ -310,36 +325,6 @@ public class ExpenseInsight extends JFrame {
         // Update the displayed expenses in the DayDisplayUI (assuming you have a reference to it)
         DayDisplayUI dayDisplay = new DayDisplayUI(this, day, dayExpenses[day - 1].getExpenses());
         dayDisplay.setVisible(true);
-    }
-
-    // Method to show the bar graph
-    private void showBarGraph() {
-    // Create a new BarGraph instance
-        BarGraph barGraph = new BarGraph();
-
-    // Load expenses data from the ExpenseTracker
-        try {
-            // Assuming you want to show the total expenses for each category for the current month
-            Map<String, Integer> expenses = expenseTracker.getExpenses(month.getMonthName());
-        
-            // Populate the bar graph model with expenses
-            for (Map.Entry<String, Integer> entry : expenses.entrySet()) {
-                BarGraphModel.BarItem item = new BarGraphModel.BarItem(entry.getKey());
-                item.percentage = (entry.getValue() * 100) / BUDGET; // Calculate percentage based on budget
-                barGraph.getModel().addItem(item);
-            }
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Error loading expenses for bar graph: " + e.getMessage());
-        return;
-    }
-
-    // Create a new frame to display the bar graph
-    JFrame barGraphFrame = new JFrame("Bar Graph of Expenses");
-    barGraphFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-    barGraphFrame.setSize(800, 600);
-    barGraphFrame.setLocationRelativeTo(null);
-    barGraphFrame.getContentPane().add(new BarGraphApp(barGraph)); // Pass the bar graph to the app
-    barGraphFrame.setVisible(true);
     }
 
     public DayExpense[] getDayExpenses() {
