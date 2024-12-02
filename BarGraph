@@ -1,122 +1,123 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.data.category.DefaultCategoryDataset;
 
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.FontMetrics;
-import java.awt.Graphics;
+public class BarGraph extends JFrame {
 
-/**
- *
- * @author Nate
- */
-public class BarGraph {
+    private JTextField[] expenseFields;
+    private JTextField[] incomeFields; // Changed from savingsFields to incomeFields
+    private JButton generateGraphButton;
 
-    protected BarGraphModel model;
-    
-    protected static final Font BAR_TITLE_FONT = new Font("Calibri", Font.PLAIN, 11);
-    
     public BarGraph() {
-        this.model = new BarGraphModel();
-        
-        //TODO: Remove this code below. Only test code
-        model.setLocation(200, 75);
-        model.setSize(525, 400);
-        
-        BarGraphModel.BarItem item = new BarGraphModel.BarItem("January");
-        item.percentage = 60;
-        model.addItem(item);
-        
-        item = new BarGraphModel.BarItem("February");
-        item.percentage = 50;
-        model.addItem(item);
-        
-        item = new BarGraphModel.BarItem("March");
-        item.percentage = 65;
-        model.addItem(item);
-        
-        item = new BarGraphModel.BarItem("April");
-        item.percentage = 70;
-        model.addItem(item);
-        
-        item = new BarGraphModel.BarItem("June");
-        item.percentage = 70;
-        model.addItem(item);
-        
-        item = new BarGraphModel.BarItem("July");
-        item.percentage = 70;
-        model.addItem(item);
-        
-        item = new BarGraphModel.BarItem("August");
-        item.percentage = 70;
-        model.addItem(item);
-        
-        item = new BarGraphModel.BarItem("September");
-        item.percentage = 70;
-        model.addItem(item);
-        
-        item = new BarGraphModel.BarItem("October");
-        item.percentage = 70;
-        model.addItem(item);
-        
-        item = new BarGraphModel.BarItem("November");
-        item.percentage = 70;
-        model.addItem(item);
-        
-        item = new BarGraphModel.BarItem("December");
-        item.percentage = 70;
-        model.addItem(item);
-        
-     
-    }
-    
-    public BarGraphModel getModel() {
-        return model;
+        setTitle("Monthly Finance Tracker");
+        setSize(600, 400);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(new GridLayout(14, 3));
+
+        expenseFields = new JTextField[12];
+        incomeFields = new JTextField[12]; // Changed from savingsFields to incomeFields
+
+        // Create input fields for each month
+        for (int i = 0; i < 12; i++) {
+            JLabel monthLabel = new JLabel(getMonthName(i) + " Expenses:");
+            expenseFields[i] = new JTextField();
+            JLabel incomeLabel = new JLabel(getMonthName(i) + " Income:"); // Changed label to Income
+            incomeFields[i] = new JTextField(); // Changed from savingsFields to incomeFields
+
+            add(monthLabel);
+            add(expenseFields[i]);
+            add(incomeLabel);
+            add(incomeFields[i]); // Changed from savingsFields to incomeFields
+        }
+
+        generateGraphButton = new JButton("Generate Bar Graph");
+        generateGraphButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                generateBarGraph();
+            }
+        });
+
+        add(generateGraphButton);
     }
 
-    public void setModel(BarGraphModel model) {
-        this.model = model;
+    private String getMonthName(int monthIndex) {
+        return new java.text.DateFormatSymbols().getMonths()[monthIndex];
     }
-    
-    public void draw(Graphics g){
-        drawItems(g);
-        drawBoarder(g);
-        
-        
-    }
-    
-    private void drawItems(Graphics g){
-        int i = 0;
-        g.setFont(BAR_TITLE_FONT);
-        FontMetrics fm = g.getFontMetrics(BAR_TITLE_FONT);
-        
-        for (BarGraphModel.BarItem item : model.items){
-            
-            int percentHeight = ((int)((double)item.percentage/100 * model.getSize().height));
-            
-            int x = model.getX() + i * model.getHorizontalGap();
-            int y = model.getY() + model.getSize().height - percentHeight;
-            int w = item.width;
-            int h = percentHeight;
-            g.setColor(item.background==null ? new Color(255, 0, 0) : item.background);
-            g.fillRect(x, y, w, h);
-          
-            i++;
-            //Draw the title
-            int sw = fm.stringWidth(item.title);
-            if (sw < item.width){
-                x = x + ((item.width - sw)/2);
-            } else {
-                x = x - ((sw - item.width)/2);
+
+    private void generateBarGraph() {
+        DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+        double totalExpenses = 0;
+        double totalIncome = 0;
+
+        for (int i = 0; i < 12; i++) {
+            String month = getMonthName(i);
+            String expenseText = expenseFields[i].getText();
+            String incomeText = incomeFields[i].getText();
+
+            double expense = 0;
+            double income = 0;
+            boolean hasData = false;
+
+            // Check if there is any data for the month
+            if (!expenseText.isEmpty()) {
+                expense = Double.parseDouble(expenseText);
+                dataset.addValue(expense, "Expenses", month);
+                totalExpenses += expense;
+                hasData = true; // Mark that there is data
             }
-            
-            y = model.getY() + model.getSize().height + BAR_TITLE_FONT.getSize();
-            g.drawString(item.title, x, y);
+
+            if (!incomeText.isEmpty()) {
+                income = Double.parseDouble(incomeText);
+                dataset.addValue(income, "Income", month);
+                totalIncome += income;
+                hasData = true; // Mark that there is data
+            }
+
+            // Only add saved amount if there is data
+            if (hasData) {
+                double saved = income - expense;
+                dataset.addValue(saved, "Saved", month);
+            }
         }
+
+        // Calculate total savings
+        double totalSavings = totalIncome - totalExpenses;
+
+        // Create the bar chart without a title
+        JFreeChart chart = ChartFactory.createBarChart(
+                "2024 Report", // Removed title
+                "Month",
+                "Amount",
+                dataset
+        );
+
+        ChartPanel chartPanel = new ChartPanel(chart);
+        JFrame chartFrame = new JFrame();
+        chartFrame.setTitle("Bar Graph");
+        chartFrame.setSize(800, 600);
+        chartFrame.setLayout(new BorderLayout());
+
+        JPanel totalPanel = new JPanel();
+        totalPanel.setLayout(new GridLayout(1, 3)); // Changed to 3 columns
+        totalPanel.add(new JLabel("Total Expenses: " + String.format("%.2f", totalExpenses)));
+        totalPanel.add(new JLabel("Total Income: " + String.format("%.2f", totalIncome)));
+        totalPanel.add(new JLabel("Total Savings: " + String.format("%.2f", totalSavings))); // Added total savings
+
+        chartFrame.add(totalPanel, BorderLayout.NORTH);
+        chartFrame.add(chartPanel, BorderLayout.CENTER);
+        chartFrame.setVisible(true);
     }
-    
-    private void drawBoarder(Graphics g){
-        g.setColor(Color.black);
-        g.drawRoundRect(model.getX(), model.getY(), model.getSize().width, model.getSize().height, 5, 5);
-        
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            BarGraph app = new BarGraph();
+            app.setVisible(true);
+        });
     }
-    
 }
