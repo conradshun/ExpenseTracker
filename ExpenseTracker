@@ -104,7 +104,7 @@ public class ExpenseTracker {
                 connection.close(); // Close the connection if it's not null
             }
         } catch (SQLException e) {
-            System.err.println("Error closing connection: " ```java
+            System.err.println("Error closing connection: ");
             System.err.println("Error closing connection: " + e.getMessage());
         }
     }
