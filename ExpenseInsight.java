@@ -1,5 +1,3 @@
-package polish;
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -57,7 +55,7 @@ public class ExpenseInsight extends JFrame {
 
     public ExpenseInsight() {
         // Initialize ExpenseTracker with the database URL
-        expenseTracker = new ExpenseTracker("jdbc:mysql://localhost:3306/expense_tracker");
+      
 
         setBackground(new Color(0, 0, 64));
         setTitle("Expense Insight");
@@ -115,7 +113,7 @@ public class ExpenseInsight extends JFrame {
         getContentPane().add(leftPanel, BorderLayout.WEST);
 
         // Create and add the calendar panel
-        calendarPanel = new JPanel(new GridLayout(0, 7)); // Changed to 6 rows and 7 columns for day labels
+        calendarPanel = new JPanel(new GridLayout(0, 7)); // 7 columns // finally fixed this thing
         calendarPanel.setBackground(new Color(0, 128, 128));
         dayButtons = new HashMap<>();
 
@@ -135,6 +133,18 @@ public class ExpenseInsight extends JFrame {
         updateCalendar(); // Initial calendar setup
         getContentPane().add(calendarPanel, BorderLayout.CENTER);
 
+        annualReportButton.addActionListener(e -> {
+            SwingUtilities.invokeLater(() -> {
+                    Map<String, Integer> expenses = expenseTracker.getAnnualExpenses();
+                    Map<String, Integer> income = expenseTracker.getAnnualIncome();
+
+                    BarGraph barGraph = new BarGraph(expenses, income);
+                    barGraph.setVisible(true);
+               
+            });
+        });
+
+        
         // Set up action listeners for navigation buttons
         previousButton.addActionListener(e -> {
             month.previous();
@@ -144,10 +154,6 @@ public class ExpenseInsight extends JFrame {
         nextButton.addActionListener(e -> {
             month.next();
             updateMonthDisplay();
-        });
-        
-        annualReportButton.addActionListener(e -> {
-        	// call annual report
         });
         
         logoutButton.addActionListener(e -> {
@@ -172,12 +178,12 @@ public class ExpenseInsight extends JFrame {
                     int currentYear = Calendar.getInstance().get(Calendar.YEAR);
                     String monthKey = currentYear + "-" + String.format("%02d", month.getMonthNumber()); // Format as "YYYY-MM"
                     
-                    // Wrap the setBudget call in a try-catch block to handle SQLException
-                    try {
+                  // Wrap the setBudget call in a try-catch block to handle SQLException
+                 //   try {
                         expenseTracker.setBudget(monthKey, BUDGET); // Update budget in ExpenseTracker
-                    } catch (SQLException ex) {
-                        JOptionPane.showMessageDialog(this, "Error updating budget: " + ex.getMessage());
-                    }
+               //     } catch (SQLException ex) {
+               //         JOptionPane.showMessageDialog(this, "Error updating budget: " + ex.getMessage());
+               //     }
                     
                 } catch (NumberFormatException ex) {
                     JOptionPane.showMessageDialog(this, "Invalid budget amount. Please enter a number.");
@@ -210,7 +216,7 @@ public class ExpenseInsight extends JFrame {
 
     private void loadExpensesForCurrentMonth() {
         // Load expenses from ExpenseTracker for the current month
-        try {
+       // try {
             EXPENSE = expenseTracker.getTotal(month.getMonthName());
             expenseLabel.setText("EXPENSE: " + EXPENSE);
             TOTAL = BUDGET - EXPENSE;
@@ -234,12 +240,12 @@ public class ExpenseInsight extends JFrame {
                     dayExpenses[day - 1].addExpense(category, entry.getValue());
                 }
             }
-        } catch (SQLException e) {
+      /*  } catch (SQLException e) {
             JOptionPane.showMessageDialog(this, "Error loading expenses: " + e.getMessage());
-        }
+        } */
     }
-
-    private void updateCalendar() {
+    // creates the calendar
+   private void updateCalendar() {
         // Clear the calendar panel
         calendarPanel.removeAll();
 
@@ -283,19 +289,7 @@ public class ExpenseInsight extends JFrame {
             dayButtons.put(i, dayButton);
             calendarPanel.add(dayButton);
         }
-
-        // Calculate how many empty cells to add to fill the last row
-        int totalCells = firstDayOfWeek + daysInMonth;
-        int emptyCells = (totalCells % 7 == 0) ? 0 : (7 - (totalCells % 7)); // Calculate how many empty cells to add
-
-        // Add empty labels to fill the last row if necessary
-        for (int i = 0; i < emptyCells; i++) {
-            calendarPanel.add(new JLabel("")); // Add empty labels to fill the last row
         }
-
-        calendarPanel.revalidate(); // Refresh the calendar panel
-        calendarPanel.repaint(); // Repaint the calendar panel to show updates
-    }
 
     void addExpense(String category, int amount, int day) {
         if (amount <= 0) {
@@ -316,11 +310,11 @@ public class ExpenseInsight extends JFrame {
         expenseLabel.setText("EXPENSE: " + EXPENSE);
         
         // Add the expense to the ExpenseTracker
-        try {
+      //  try {
             expenseTracker.addExpense(month.getMonthName(), category, amount);
-        } catch (SQLException e) {
+       /* } catch (SQLException e) {
             JOptionPane.showMessageDialog(this, "Error adding expense: " + e.getMessage());
-        }
+        }*/
 
         // Update the displayed expenses in the DayDisplayUI (assuming you have a reference to it)
         DayDisplayUI dayDisplay = new DayDisplayUI(this, day, dayExpenses[day - 1].getExpenses());
