@@ -11,27 +11,27 @@ import java.sql.SQLException;
 public class UserAccount {
     private int id; // Unique ID for the user
     private String username; // User's username
-    private String password; // User's password
+    private String password; // User's plain-text password
 
     // Database connection details
-    private static final String DB_URL = "jdbc:mysql://localhost:3306/expense_tracker";
+    private static final String DB_URL = "jdbc:mysql://localhost:3306/expensetrackerdb";
     private static final String DB_USER = "root"; // Replace with your database username
-    private static final String DB_PASSWORD = "your_password"; // Replace with your database password
+    private static final String DB_PASSWORD = "Conradqt4ever"; // Replace with your database password
 
     /**
      * Constructor to create a UserAccount object.
      *
      * @param username the username of the user.
-     * @param password the password of the user.
+     * @param password the plain-text password of the user.
      */
     public UserAccount(String username, String password) {
         this.username = username;
         this.password = password;
     }
-    
+
     public UserAccount() {
-    	this.username = null;
-    	this.password = null;
+        this.username = null;
+        this.password = null;
     }
 
     /**
@@ -47,10 +47,12 @@ public class UserAccount {
     /**
      * Saves a new user to the database.
      *
+     * @param username the username of the new user.
+     * @param password the plain-text password of the new user.
      * @return true if the user was saved successfully, false otherwise.
      */
     public boolean save(String username, String password) {
-        String query = "INSERT INTO UserAccount (username, password) VALUES (?, ?)";
+        String query = "INSERT INTO user_account (username, password) VALUES (?, ?)";
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, username);
@@ -64,14 +66,14 @@ public class UserAccount {
     }
 
     /**
-     * Authenticates a user by verifying username and password in the database.
+     * Authenticates a user by verifying username and plain-text password in the database.
      *
      * @param username the username of the user.
-     * @param password the password of the user.
+     * @param password the plain-text password of the user.
      * @return true if authentication is successful, false otherwise.
      */
     public static boolean authenticate(String username, String password) {
-        String query = "SELECT * FROM UserAccount WHERE username = ? AND password = ?";
+        String query = "SELECT * FROM user_account WHERE username = ? AND password = ?";
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, username);
@@ -87,11 +89,11 @@ public class UserAccount {
     /**
      * Updates the password of the current user in the database.
      *
-     * @param newPassword the new password to set.
+     * @param newPassword the new plain-text password to set.
      * @return true if the password was updated successfully, false otherwise.
      */
     public boolean updatePassword(String newPassword) {
-        String query = "UPDATE UserAccount SET password = ? WHERE username = ?";
+        String query = "UPDATE user_account SET password = ? WHERE username = ?";
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, newPassword);
@@ -114,7 +116,7 @@ public class UserAccount {
      * @return true if the account was deleted successfully, false otherwise.
      */
     public static boolean deleteAccount(String username) {
-        String query = "DELETE FROM UserAccount WHERE username = ?";
+        String query = "DELETE FROM user_account WHERE username = ?";
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, username);
@@ -133,7 +135,7 @@ public class UserAccount {
      * @return true if the username exists, false otherwise.
      */
     public static boolean usernameExists(String username) {
-        String query = "SELECT * FROM UserAccount WHERE username = ?";
+        String query = "SELECT * FROM user_account WHERE username = ?";
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, username);
