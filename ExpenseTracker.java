@@ -1,129 +1,149 @@
+import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
 
 public class ExpenseTracker {
-    private Map<String, Budget> budgets;
-    private Map<String, Map<String, Integer>> expenses;
-    private Map<String, Map<String, Integer>> income;
+    private static final String DB_URL = "jdbc:mysql://localhost:3306/expensetrackerdb";
+    private static final String DB_USER = "root";
+    private static final String DB_PASSWORD = "Conradqt4ever";
 
-    public ExpenseTracker() {
-        budgets = new HashMap<>();
-        expenses = new HashMap<>();
-        income = new HashMap<>();
-    }
-    
-    // delete if unnecessary, the idea is that its kinda like a backup data
-    // Method to load data from memory if needed (currently not implemented)
-    public void loadData() {
-        // This method would load data from memory if needed
+    private static Connection getConnection() throws SQLException {
+        return DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
     }
 
-    // Method to retrieve the budget for a specific month
-    public int getBudget(String month) {
-        return budgets.getOrDefault(month, new Budget()).getBudget();
-    }
-
-    // Method to retrieve the limit for a specific month
-    public int getLimit(String month) {
-        return budgets.getOrDefault(month, new Budget()).getLimit();
-    }
-
-    // Method to retrieve all expenses for a specific month
-    public Map<String, Integer> getExpenses(String month) {
-        return expenses.getOrDefault(month, new HashMap<>());
-    }
-
-    // Method to retrieve the total expenses for a specific month
-    public int getTotal(String month) {
-        int total = 0;
-        for (int amount : getExpenses(month).values()) {
-            total += amount;
+    public void saveBudget(String month, int budget) throws SQLException {
+        String query = "INSERT INTO budgets (month, budget) VALUES (?, ?) ON DUPLICATE KEY UPDATE budget = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+            pstmt.setString(1, month);
+            pstmt.setInt(2, budget);
+            pstmt.setInt(3, budget);
+            pstmt.executeUpdate();
         }
-        return total;
     }
 
-    // Method to update the budget for a specific month
-    public void setBudget(String month, int budget) {
-        Budget budgetObject = budgets.getOrDefault(month, new Budget());
-        budgetObject.setBudget(budget);
-        budgets.put(month, budgetObject);
+    public void saveExpense(String month, String category, int amount, int day) throws SQLException {
+        String query = "INSERT INTO expenses (month, category, amount, day) VALUES (?, ?, ?, ?)";
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+            pstmt.setString(1, month);
+            pstmt.setString(2, category);
+            pstmt.setInt(3, amount);
+            pstmt.setInt(4, day);
+            pstmt.executeUpdate();
+        }
     }
 
-    // Method to update the limit for a specific month
-    public void setLimit(String month, int limit) {
-        Budget budgetObject = budgets.getOrDefault(month, new Budget());
-        budgetObject.setLimit(limit);
-        budgets.put(month, budgetObject);
+    public Map<String, Integer> getBudgets() throws SQLException {
+        Map<String, Integer> budgets = new HashMap<>();
+        String query = "SELECT month, budget FROM budgets";
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query);
+             ResultSet rs = pstmt.executeQuery()) {
+            while (rs.next()) {
+                budgets.put(rs.getString("month"), rs.getInt("budget"));
+            }
+        }
+        return budgets;
     }
 
-    // Method to get Annual Expenses
-    public Map<String, Integer> getAnnualExpenses() {
+    public Map<String, Map<String, Integer>> getExpenses(String month) throws SQLException {
+        Map<String, Map<String, Integer>> expenses = new HashMap<>();
+        String query = "SELECT day, category, amount FROM expenses WHERE month = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+            pstmt.setString(1, month);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    int day = rs.getInt("day");
+                    String category = rs.getString("category");
+                    int amount = rs.getInt("amount");
+                    expenses.computeIfAbsent(String.valueOf(day), k -> new HashMap<>()).put(category, amount);
+                }
+            }
+        }
+        return expenses;
+    }
+
+    public int getTotal(String month) throws SQLException {
+        String query = "SELECT SUM(amount) as total FROM expenses WHERE month = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+            pstmt.setString(1, month);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("total");
+                }
+            }
+        }
+        return 0;
+    }
+
+    public boolean hasExpensesForDate(String month, int day) throws SQLException {
+        String query = "SELECT * FROM expenses WHERE month = ? AND day = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+            pstmt.setString(1, month);
+            pstmt.setInt(2, day);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
+
+    public Map<String, Integer> getAnnualExpenses(int year) throws SQLException {
         Map<String, Integer> annualExpenses = new HashMap<>();
-        for (Map<String, Integer> monthExpenses : expenses.values()) {
-            for (Map.Entry<String, Integer> entry : monthExpenses.entrySet()) {
-                String category = entry.getKey();
-                int amount = entry.getValue();
-                annualExpenses.put(category, annualExpenses.getOrDefault(category, 0) + amount);
+        String query = "SELECT category, SUM(amount) as total FROM expenses WHERE YEAR(STR_TO_DATE(month, '%Y-%m')) = ? GROUP BY category";
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+            pstmt.setInt(1, year);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    annualExpenses.put(rs.getString("category"), rs.getInt("total"));
+                }
             }
         }
         return annualExpenses;
     }
 
-    // Method to get Annual Income
-    public Map<String, Integer> getAnnualIncome() {
-        Map<String, Integer> annualIncome = new HashMap<>();
-        for (Map<String, Integer> monthIncome : income.values()) {
-            for (Map.Entry<String, Integer> entry : monthIncome.entrySet()) {
-                String category = entry.getKey();
-                int amount = entry.getValue();
-                annualIncome.put(category, annualIncome.getOrDefault(category, 0) + amount);
+    public int getBudget(String month) throws SQLException {
+        String query = "SELECT budget FROM budgets WHERE month = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+            pstmt.setString(1, month);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("budget");
+                }
             }
         }
-        return annualIncome;
+        return 0; // Return 0 if no budget is set for the month
     }
 
-    // Method to add an expense for a specific month and category
-    public void addExpense(String month, String category, int amount) {
-        Map<String, Integer> monthExpenses = expenses.getOrDefault(month, new HashMap<>());
-        monthExpenses.put(category, monthExpenses.getOrDefault(category, 0) + amount);
-        expenses.put(month, monthExpenses);
+    public boolean authenticateUser(String username, String password) throws SQLException {
+        String query = "SELECT * FROM user_account WHERE username = ? AND password = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+            pstmt.setString(1, username);
+            pstmt.setString(2, password);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                return rs.next();
+            }
+        }
     }
 
-    // Method to add an income for a specific month and category
-    public void addIncome(String month, String category, int amount) {
-        Map<String, Integer> monthIncome = income.getOrDefault(month, new HashMap<>());
-        monthIncome.put(category, monthIncome.getOrDefault(category, 0) + amount);
-        income.put(month, monthIncome);
-    }
-
-    // Method to close the data structure
-    public void close() {
-        // No need to close anything in this case
-    }
-
-    private static class Budget {
-        private int budget;
-        private int limit;
-
-        public Budget() {
-            this.budget = 0;
-            this.limit = 0;
-        }
-
-        public int getBudget() {
-            return budget;
-        }
-
-        public void setBudget(int budget) {
-            this.budget = budget;
-        }
-
-        public int getLimit() {
-            return limit;
-        }
-
-        public void setLimit(int limit) {
-            this.limit = limit;
+    public boolean registerUser(String username, String password) throws SQLException {
+        String query = "INSERT INTO user_account (username, password) VALUES (?, ?)";
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+            pstmt.setString(1, username);
+            pstmt.setString(2, password);
+            pstmt.executeUpdate();
+            return true;
+        } catch (SQLIntegrityConstraintViolationException e) {
+            // This exception is thrown when the username already exists
+            return false;
         }
     }
 }
+
