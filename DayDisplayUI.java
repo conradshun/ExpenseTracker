@@ -23,7 +23,7 @@ public class DayDisplayUI extends JDialog {
 
         setLocationRelativeTo(parent);
     }
-
+    // creates the components that create the UI
     private void initializeComponents(Map<String, Integer> expenses) {
         expenseDisplayPanel = new JPanel();
         expenseDisplayPanel.setLayout(new BoxLayout(expenseDisplayPanel, BoxLayout.Y_AXIS));
@@ -33,7 +33,7 @@ public class DayDisplayUI extends JDialog {
         expenseField = new JTextField(10);
         categoryField = new JTextField(10);
     }
-
+    // composes the layout of the UI
     private void createLayout() {
         JPanel contentPanel = new JPanel(new BorderLayout(10, 10));
         contentPanel.setBackground(new Color(0, 128, 128));
@@ -52,7 +52,7 @@ public class DayDisplayUI extends JDialog {
         saveButton.addActionListener(e -> saveExpense());
         getContentPane().add(saveButton, BorderLayout.SOUTH);
     }
-
+    // creates input panel of the expense and category
     private JPanel createInputPanel() {
         JPanel inputPanel = new JPanel(new GridLayout(2, 2, 5, 5));
         inputPanel.setBackground(Color.DARK_GRAY);
@@ -73,7 +73,7 @@ public class DayDisplayUI extends JDialog {
 
         return inputPanel;
     }
-
+    // data handler to save the expenses under the category it was saved with
     private void saveExpense() {
         String expenseText = expenseField.getText();
         String categoryText = categoryField.getText();
@@ -96,7 +96,7 @@ public class DayDisplayUI extends JDialog {
             JOptionPane.showMessageDialog(this, "Please fill out both fields.");
         }
     }
-
+    // updates the display of the expenses saved with the category
     private void updateExpenseDisplay(Map<String, Integer> expenses) {
         expenseDisplayPanel.removeAll();
         if (expenses != null && !expenses.isEmpty()) {
