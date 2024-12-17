@@ -7,86 +7,111 @@ public class DayDisplayUI extends JDialog {
     private JTextField expenseField;
     private JTextField categoryField;
     private JPanel expenseDisplayPanel;
+    private ExpenseInsight parent;
+    private int day;
 
-    public DayDisplayUI(Frame parent, int day, Map<String, Integer> expenses) {
-        super(parent, "Expense for " + day, true);
+    public DayDisplayUI(ExpenseInsight parent, int day, Map<String, Integer> expenses) {
+        super(parent, "Expense for Day " + day, true);
+        this.parent = parent;
+        this.day = day;
         setSize(400, 300);
-        getContentPane().setLayout(new GridLayout(4, 1, 10, 10));
+        getContentPane().setLayout(new BorderLayout(10, 10));
         getContentPane().setBackground(new Color(0, 128, 128));
 
-        // Create panel for displaying expenses
+        initializeComponents(expenses);
+        createLayout();
+
+        setLocationRelativeTo(parent);
+    }
+
+    private void initializeComponents(Map<String, Integer> expenses) {
         expenseDisplayPanel = new JPanel();
         expenseDisplayPanel.setLayout(new BoxLayout(expenseDisplayPanel, BoxLayout.Y_AXIS));
         expenseDisplayPanel.setBackground(new Color(255, 215, 0));
-        updateExpenseDisplay(expenses); // Initial display of expenses
+        updateExpenseDisplay(expenses);
 
-        // Add the expense display panel to the dialog
-        getContentPane().add(expenseDisplayPanel);
+        expenseField = new JTextField(10);
+        categoryField = new JTextField(10);
+    }
 
-        // Create panel for input fields
-        JPanel inputPanel = new JPanel(new GridLayout(2, 2));
+    private void createLayout() {
+        JPanel contentPanel = new JPanel(new BorderLayout(10, 10));
+        contentPanel.setBackground(new Color(0, 128, 128));
+
+        JScrollPane scrollPane = new JScrollPane(expenseDisplayPanel);
+        scrollPane.setPreferredSize(new Dimension(380, 150));
+        contentPanel.add(scrollPane, BorderLayout.CENTER);
+
+        JPanel inputPanel = createInputPanel();
+        contentPanel.add(inputPanel, BorderLayout.SOUTH);
+
+        getContentPane().add(contentPanel, BorderLayout.CENTER);
+
+        JButton saveButton = new JButton("Save");
+        saveButton.setBackground(new Color(173, 216, 230));
+        saveButton.addActionListener(e -> saveExpense());
+        getContentPane().add(saveButton, BorderLayout.SOUTH);
+    }
+
+    private JPanel createInputPanel() {
+        JPanel inputPanel = new JPanel(new GridLayout(2, 2, 5, 5));
         inputPanel.setBackground(Color.DARK_GRAY);
 
-        // Expense input
         JLabel expenseLabel = new JLabel("EXPENSE:");
-        expenseLabel.setForeground(new Color(0, 0, 0));
-        expenseLabel.setBackground(new Color(0, 128, 128));
-        expenseField = new JTextField();
+        JLabel categoryLabel = new JLabel("CATEGORY:");
+
+        JLabel[] labels = {expenseLabel, categoryLabel};
+        for (JLabel label : labels) {
+            label.setForeground(Color.WHITE);
+            label.setHorizontalAlignment(SwingConstants.RIGHT);
+        }
+
         inputPanel.add(expenseLabel);
         inputPanel.add(expenseField);
-
-        // Category input
-        JLabel categoryLabel = new JLabel("CATEGORY:");
-        categoryLabel.setForeground(new Color(0, 0, 0));
-        categoryLabel.setBackground(new Color(0, 128, 128));
-        categoryField = new JTextField();
         inputPanel.add(categoryLabel);
         inputPanel.add(categoryField);
 
-        // Add input panel to the dialog
-        getContentPane().add(inputPanel);
+        return inputPanel;
+    }
 
-        // Save button
-        JButton saveButton = new JButton("Save");
-        saveButton.setBackground(new Color(173, 216, 230));
-        saveButton.addActionListener(e -> {
-            String expenseText = expenseField.getText();
-            String categoryText = categoryField.getText();
+    private void saveExpense() {
+        String expenseText = expenseField.getText();
+        String categoryText = categoryField.getText();
 
-            if (!expenseText.isEmpty() && !categoryText.isEmpty()) {
-                try {
-                    int expense = Integer.parseInt(expenseText);
-                    if (expense > 0) { // Ensure expense is positive
-                        ((ExpenseInsight) parent).addExpense(categoryText, expense, day);
-                        updateExpenseDisplay(((ExpenseInsight) parent).getDayExpenses()[day - 1].getExpenses()); // Update displayed expenses
-                        expenseField.setText(""); // Clear the input field
-                        categoryField.setText(""); // Clear the input field
-                    } else {
-                        JOptionPane.showMessageDialog(this, "Expense must be greater than zero.");
-                    }
-                } catch (NumberFormatException ex) {
-                    JOptionPane.showMessageDialog(this, "Invalid expense amount. Please enter a number.");
+        if (!expenseText.isEmpty() && !categoryText.isEmpty()) {
+            try {
+                int expense = Integer.parseInt(expenseText);
+                if (expense > 0) {
+                    parent.addExpense(categoryText, expense, day);
+                    updateExpenseDisplay(parent.getDayExpenses()[day - 1].getExpenses());
+                    expenseField.setText("");
+                    categoryField.setText("");
+                } else {
+                    JOptionPane.showMessageDialog(this, "Expense must be greater than zero.");
                 }
-            } else {
-                JOptionPane.showMessageDialog(this, "Please fill out both fields.");
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Invalid expense amount. Please enter a number.");
             }
-        });
-        getContentPane().add(saveButton);
+        } else {
+            JOptionPane.showMessageDialog(this, "Please fill out both fields.");
+        }
     }
 
     private void updateExpenseDisplay(Map<String, Integer> expenses) {
-        expenseDisplayPanel.removeAll(); // Clear existing labels
+        expenseDisplayPanel.removeAll();
         if (expenses != null && !expenses.isEmpty()) {
             for (Map.Entry<String, Integer> entry : expenses.entrySet()) {
-                JLabel expenseLabel = new JLabel(entry.getKey() + ": " + entry.getValue());
+                JLabel expenseLabel = new JLabel(entry.getKey() + ": $" + entry.getValue());
+                expenseLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
                 expenseDisplayPanel.add(expenseLabel);
             }
         } else {
             JLabel noExpenseLabel = new JLabel("No expenses recorded for this day.");
+            noExpenseLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
             expenseDisplayPanel.add(noExpenseLabel);
         }
-        expenseDisplayPanel.revalidate(); // Refresh the panel
-        expenseDisplayPanel.repaint(); // Repaint the panel
+        expenseDisplayPanel.revalidate();
+        expenseDisplayPanel.repaint();
     }
 }
 

@@ -8,22 +8,6 @@ import java.util.Map;
 import java.util.Calendar;
 import javax.swing.border.Border;
 
-class DayExpense {
-    private Map<String, Integer> expenses;
-
-    public DayExpense() {
-        this.expenses = new HashMap<>();
-    }
-
-    public void addExpense(String category, int amount) {
-        expenses.put(category, expenses.getOrDefault(category, 0) + amount);
-    }
-
-    public Map<String, Integer> getExpenses() {
-        return expenses;
-    }
-}
-
 public class ExpenseInsight extends JFrame {
 
     private static final long serialVersionUID = 1L;
@@ -305,6 +289,25 @@ public class ExpenseInsight extends JFrame {
         calendarPanel.repaint();
     }
 
+    public void addExpense(String category, int amount, int day) {
+        try {
+            String monthKey = getCurrentMonthKey();
+            expenseTracker.saveExpense(monthKey, category, amount, day);
+
+            dayExpenses[day - 1].addExpense(category, amount);
+
+            EXPENSE += amount;
+            TOTAL = BUDGET - EXPENSE;
+
+            expenseLabel.setText("EXPENSE: " + EXPENSE);
+            totalLabel.setText("BUDGET LEFT: " + TOTAL);
+
+            updateCalendar();
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Error adding expense: " + e.getMessage());
+        }
+    }
+
     public DayExpense[] getDayExpenses() {
         return dayExpenses;
     }
@@ -314,3 +317,18 @@ public class ExpenseInsight extends JFrame {
     }
 }
 
+class DayExpense {
+    private Map<String, Integer> expenses;
+
+    public DayExpense() {
+        this.expenses = new HashMap<>();
+    }
+
+    public void addExpense(String category, int amount) {
+        expenses.put(category, expenses.getOrDefault(category, 0) + amount);
+    }
+
+    public Map<String, Integer> getExpenses() {
+        return expenses;
+    }
+}
