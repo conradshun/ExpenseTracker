@@ -8,7 +8,7 @@ public class LoginUI extends JFrame {
     private JTextField usernameField;
     private JPasswordField passwordField;
     private JButton loginButton;
-    private JButton signInButton;
+    private JButton registerButton;
     private ExpenseTracker expenseTracker;
 
     public LoginUI() {
@@ -57,10 +57,10 @@ public class LoginUI extends JFrame {
         loginButton.setBackground(new Color(200, 200, 200));
         panel.add(loginButton);
 
-        signInButton = new JButton("Sign In");
-        signInButton.setBounds(210, 210, 100, 30);
-        signInButton.setBackground(new Color(200, 200, 200));
-        panel.add(signInButton);
+        registerButton = new JButton("Register");
+        registerButton.setBounds(210, 210, 100, 30);
+        registerButton.setBackground(new Color(200, 200, 200));
+        panel.add(registerButton);
 
         add(panel);
 
@@ -69,22 +69,22 @@ public class LoginUI extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 String username = usernameField.getText();
                 String password = new String(passwordField.getPassword());
-                
                 try {
                     if (expenseTracker.authenticateUser(username, password)) {
+                        int userId = expenseTracker.getUserId(username);
                         JOptionPane.showMessageDialog(LoginUI.this, "Login successful!");
                         LoginUI.this.dispose();
-                        new ExpenseInsight(username).setVisible(true);
+                        new ExpenseInsight(userId).setVisible(true);
                     } else {
-                        JOptionPane.showMessageDialog(LoginUI.this, "Invalid username or password", "Login Failed", JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.showMessageDialog(LoginUI.this, "Invalid username or password.");
                     }
                 } catch (SQLException ex) {
-                    JOptionPane.showMessageDialog(LoginUI.this, "Database error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(LoginUI.this, "Error during login: " + ex.getMessage());
                 }
             }
         });
 
-        signInButton.addActionListener(new ActionListener() {
+        registerButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String username = usernameField.getText();
@@ -116,4 +116,3 @@ public class LoginUI extends JFrame {
         });
     }
 }
-

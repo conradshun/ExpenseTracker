@@ -27,13 +27,15 @@ class DayExpense {
 public class ExpenseInsight extends JFrame {
 
     private static final long serialVersionUID = 1L;
-    private String currentUser; // Added to store the current user
+    private int currentUserId;
 
     private int BUDGET = 0;
+    private int BUDGET_LIMIT = 0;
     private int EXPENSE = 0;
     private int TOTAL = BUDGET - EXPENSE;
 
     private JLabel budgetLabel;
+    private JLabel budgetLimitLabel;
     private JLabel expenseLabel;
     private JLabel totalLabel;
     private JLabel monthLabel;
@@ -50,11 +52,10 @@ public class ExpenseInsight extends JFrame {
     private DayExpense[] dayExpenses;
 
     private ExpenseTracker expenseTracker;
-    private Map<String, Integer> monthlyBudgets;
 
-    public ExpenseInsight(String username) { // Updated constructor signature
-        this.currentUser = username;
-        expenseTracker = new ExpenseTracker();
+    public ExpenseInsight(int userId) {
+        this.currentUserId = userId;
+        expenseTracker = new ExpenseTracker(userId);
 
         setBackground(new Color(0, 0, 64));
         setTitle("Expense Insight");
@@ -66,7 +67,12 @@ public class ExpenseInsight extends JFrame {
         month = new Month(cal.get(Calendar.MONTH) + 1); // Calendar.MONTH is zero-based
 
         try {
-            monthlyBudgets = expenseTracker.getBudgets();
+            String monthKey = getCurrentMonthKey();
+            Map<String, Integer> budget = expenseTracker.getBudget(monthKey);
+            if (budget != null) {
+                BUDGET = budget.get("amount");
+                BUDGET_LIMIT = budget.get("limit");
+            }
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(this, "Error loading budget data: " + e.getMessage());
         }
@@ -83,6 +89,8 @@ public class ExpenseInsight extends JFrame {
         monthLabel.setForeground(new Color(255, 255, 255));
         budgetLabel = new JLabel("BUDGET: " + BUDGET);
         budgetLabel.setForeground(new Color(255, 255, 255));
+        budgetLimitLabel = new JLabel("BUDGET LIMIT: " + BUDGET_LIMIT);
+        budgetLimitLabel.setForeground(new Color(255, 255, 255));
         expenseLabel = new JLabel("EXPENSE: " + EXPENSE);
         expenseLabel.setForeground(new Color(255, 255, 255));
         totalLabel = new JLabel("BUDGET LEFT: " + TOTAL);
@@ -96,26 +104,24 @@ public class ExpenseInsight extends JFrame {
         topPanel.add(previousButton);
         topPanel.add(monthLabel);
         topPanel.add(budgetLabel);
+        topPanel.add(budgetLimitLabel);
         topPanel.add(expenseLabel);
         topPanel.add(totalLabel);
         topPanel.add(nextButton);
         getContentPane().add(topPanel, BorderLayout.NORTH);
 
         // Create and add the left panel for buttons
-        JPanel leftPanel = new JPanel(new GridLayout(5, 1, 0, 10));
+        JPanel leftPanel = new JPanel(new GridLayout(4, 1, 0, 10));
         leftPanel.setBackground(new Color(0, 128, 128));
         JButton logoutButton = new JButton("LOGOUT");
         logoutButton.setBackground(new Color(173, 216, 230));
         setLimitButton = new JButton("SET BUDGET");
         setLimitButton.setBackground(new Color(173, 216, 230));
-        JButton addBudgetButton = new JButton("ADD EXPENSE");
-        addBudgetButton.setBackground(new Color(173, 216, 230));
         JButton annualReportButton = new JButton("ANNUAL REPORT");
         annualReportButton.setBackground(new Color(173, 216, 230));
 
         leftPanel.add(logoutButton);
         leftPanel.add(setLimitButton);
-        leftPanel.add(addBudgetButton);
         leftPanel.add(annualReportButton);
         getContentPane().add(leftPanel, BorderLayout.WEST);
 
@@ -171,37 +177,24 @@ public class ExpenseInsight extends JFrame {
 
         setLimitButton.addActionListener(e -> {
             String budgetInput = JOptionPane.showInputDialog("Enter your budget:");
-            if (budgetInput != null) {
+            String limitInput = JOptionPane.showInputDialog("Enter your budget limit:");
+            if (budgetInput != null && limitInput != null) {
                 try {
                     int budget = Integer.parseInt(budgetInput);
+                    int limit = Integer.parseInt(limitInput);
                     String monthKey = getCurrentMonthKey();
-                    monthlyBudgets.put(monthKey, budget);
                     BUDGET = budget;
+                    BUDGET_LIMIT = limit;
                     TOTAL = BUDGET - EXPENSE;
                     budgetLabel.setText("BUDGET: " + BUDGET);
+                    budgetLimitLabel.setText("BUDGET LIMIT: " + BUDGET_LIMIT);
                     totalLabel.setText("BUDGET LEFT: " + TOTAL);
 
-                    expenseTracker.saveBudget(monthKey, budget);
+                    expenseTracker.saveBudget(monthKey, budget, limit);
                 } catch (NumberFormatException ex) {
-                    JOptionPane.showMessageDialog(this, "Invalid budget amount. Please enter a number.");
+                    JOptionPane.showMessageDialog(this, "Invalid budget or limit amount. Please enter numbers.");
                 } catch (SQLException ex) {
                     JOptionPane.showMessageDialog(this, "Error saving budget: " + ex.getMessage());
-                }
-            }
-        });
-
-        addBudgetButton.addActionListener(e -> {
-            String category = JOptionPane.showInputDialog("Enter expense category:");
-            if (category != null && !category.trim().isEmpty()) {
-                String amountInput = JOptionPane.showInputDialog("Enter expense amount:");
-                if (amountInput != null) {
-                    try {
-                        int amount = Integer.parseInt(amountInput);
-                        int day = Integer.parseInt(JOptionPane.showInputDialog("Enter day of the month:"));
-                        addExpense(category, amount, day);
-                    } catch (NumberFormatException ex) {
-                        JOptionPane.showMessageDialog(this, "Invalid input. Please enter numbers for amount and day.");
-                    }
                 }
             }
         });
@@ -225,8 +218,13 @@ public class ExpenseInsight extends JFrame {
     private void loadExpensesForCurrentMonth() {
         try {
             String monthKey = getCurrentMonthKey();
-            BUDGET = expenseTracker.getBudget(monthKey);
-            budgetLabel.setText("BUDGET: " + BUDGET);
+            Map<String, Integer> budget = expenseTracker.getBudget(monthKey);
+            if (budget != null) {
+                BUDGET = budget.get("amount");
+                BUDGET_LIMIT = budget.get("limit");
+                budgetLabel.setText("BUDGET: " + BUDGET);
+                budgetLimitLabel.setText("BUDGET LIMIT: " + BUDGET_LIMIT);
+            }
 
             Map<String, Map<String, Integer>> monthExpenses = expenseTracker.getExpenses(monthKey);
             EXPENSE = expenseTracker.getTotal(monthKey);
@@ -307,36 +305,11 @@ public class ExpenseInsight extends JFrame {
         calendarPanel.repaint();
     }
 
-    private void addExpense(String category, int amount, int day) {
-        if (amount <= 0) {
-            JOptionPane.showMessageDialog(null, "Expense amount must be greater than zero.");
-            return;
-        }
-
-        try {
-            String monthKey = getCurrentMonthKey();
-            expenseTracker.saveExpense(monthKey, category, amount, day);
-
-            dayExpenses[day - 1].addExpense(category, amount);
-            EXPENSE += amount;
-            expenseLabel.setText("EXPENSE: " + EXPENSE);
-            TOTAL = BUDGET - EXPENSE;
-            totalLabel.setText("BUDGET LEFT: " + TOTAL);
-
-            updateCalendar();
-
-            DayDisplayUI dayDisplay = new DayDisplayUI(this, day, dayExpenses[day - 1].getExpenses());
-            dayDisplay.setVisible(true);
-        } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this, "Error saving expense: " + ex.getMessage());
-        }
-    }
-
     public DayExpense[] getDayExpenses() {
         return dayExpenses;
     }
 
-    public static void main(String[] args) { // Updated main method
+    public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new LoginUI().setVisible(true));
     }
 }
