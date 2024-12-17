@@ -63,7 +63,7 @@ public class LoginUI extends JFrame {
         panel.add(registerButton);
 
         add(panel);
-
+        // creates the login button and listener
         loginButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -83,13 +83,13 @@ public class LoginUI extends JFrame {
                 }
             }
         });
-
+        // creates the register button and listener
         registerButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String username = usernameField.getText();
                 String password = new String(passwordField.getPassword());
-                
+                // error handling if fields are empty
                 if (username.isEmpty() || password.isEmpty()) {
                     JOptionPane.showMessageDialog(LoginUI.this, "Username and password cannot be empty", "Registration Failed", JOptionPane.ERROR_MESSAGE);
                     return;
