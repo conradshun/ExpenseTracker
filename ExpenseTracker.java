@@ -19,7 +19,7 @@ public class ExpenseTracker {
     private Connection getConnection() throws SQLException {
         return DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
     }
-
+    // checks if the user really exist in the database and has data in it
     public boolean authenticateUser(String username, String password) throws SQLException {
         String query = "SELECT id, password FROM users WHERE username = ?";
         try (Connection conn = getConnection();
@@ -36,7 +36,7 @@ public class ExpenseTracker {
             return false;
         }
     }
-
+    // gets the user's id
     public int getUserId(String username) throws SQLException {
         String query = "SELECT id FROM users WHERE username = ?";
         try (Connection conn = getConnection();
@@ -49,7 +49,7 @@ public class ExpenseTracker {
             throw new SQLException("User not found");
         }
     }
-
+    // registers the user's information
     public boolean registerUser(String username, String password) throws SQLException {
         String query = "INSERT INTO users (username, password) VALUES (?, ?)";
         try (Connection conn = getConnection();
@@ -62,7 +62,7 @@ public class ExpenseTracker {
             return false; // Username already exists
         }
     }
-
+    // saves the budget setted into the sql
     public void saveBudget(String month, int amount, int limit) throws SQLException {
         String query = "INSERT INTO budgets (month, budget, budget_limit) VALUES (?, ?, ?) " +
                        "ON DUPLICATE KEY UPDATE budget = ?, budget_limit = ?";
@@ -76,7 +76,7 @@ public class ExpenseTracker {
             stmt.executeUpdate();
         }
     }
-
+    // gets the budget data from the sql
     public Map<String, Integer> getBudget(String month) throws SQLException {
         String query = "SELECT budget, budget_limit FROM budgets WHERE month = ?";
         try (Connection conn = getConnection();
@@ -92,7 +92,7 @@ public class ExpenseTracker {
             return null;
         }
     }
-
+    // saves the expenses made into the sql
     public void saveExpense(String month, String category, int amount, int day) throws SQLException {
         String query = "INSERT INTO expenses (month, category, amount, day) VALUES (?, ?, ?, ?)";
         try (Connection conn = getConnection();
@@ -104,7 +104,7 @@ public class ExpenseTracker {
             stmt.executeUpdate();
         }
     }
-
+    // gets the expenses made into the sql
     public Map<String, Map<String, Integer>> getExpenses(String month) throws SQLException {
         Map<String, Map<String, Integer>> expenses = new HashMap<>();
         String query = "SELECT day, category, amount FROM expenses WHERE month = ?";
@@ -121,7 +121,7 @@ public class ExpenseTracker {
             return expenses;
         }
     }
-
+    // gets the total expenses from the sql
     public int getTotal(String month) throws SQLException {
         String query = "SELECT SUM(amount) as total FROM expenses WHERE month = ?";
         try (Connection conn = getConnection();
@@ -134,7 +134,7 @@ public class ExpenseTracker {
             return 0;
         }
     }
-
+    // checks if the day has expenses made by checking in the sql
     public boolean hasExpensesForDate(String month, int day) throws SQLException {
         String query = "SELECT COUNT(*) as count FROM expenses WHERE month = ? AND day = ?";
         try (Connection conn = getConnection();
@@ -148,7 +148,7 @@ public class ExpenseTracker {
             return false;
         }
     }
-
+    // gets the annual expenses from the sql
     public Map<String, Integer> getAnnualExpenses(int year) throws SQLException {
         Map<String, Integer> monthlyTotals = new HashMap<>();
         String query = "SELECT month, SUM(amount) as total FROM expenses WHERE month LIKE ? GROUP BY month";
