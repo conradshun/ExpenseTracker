@@ -129,6 +129,7 @@ public class ExpenseInsight extends JFrame {
         updateCalendar();
         getContentPane().add(calendarPanel, BorderLayout.CENTER);
 
+        // adds the button for annual report which shows a bargraph
         annualReportButton.addActionListener(e -> {
             SwingUtilities.invokeLater(() -> {
                 try {
@@ -143,22 +144,23 @@ public class ExpenseInsight extends JFrame {
             });
         });
 
+        // goes to the previous month 
         previousButton.addActionListener(e -> {
             month.previous();
             updateMonthDisplay();
         });
-
+        // goes to the next month
         nextButton.addActionListener(e -> {
             month.next();
             updateMonthDisplay();
         });
-
+        // logouts of the current user and calls the loginUI again
         logoutButton.addActionListener(e -> {
             this.dispose();
             LoginUI loginUI = new LoginUI();
             loginUI.setVisible(true);
         });
-
+        // a button for setting the limit
         setLimitButton.addActionListener(e -> {
             String budgetInput = JOptionPane.showInputDialog("Enter your budget:");
             String limitInput = JOptionPane.showInputDialog("Enter your budget limit:");
@@ -187,18 +189,18 @@ public class ExpenseInsight extends JFrame {
         setVisible(true);
         loadExpensesForCurrentMonth();
     }
-
+    // gets the current month in a string format
     private String getCurrentMonthKey() {
         int currentYear = Calendar.getInstance().get(Calendar.YEAR);
         return currentYear + "-" + String.format("%02d", month.getMonthNumber());
     }
-
+    // updates the month displayed currently
     private void updateMonthDisplay() {
         monthLabel.setText(month.getMonthName());
         updateCalendar();
         loadExpensesForCurrentMonth();
     }
-
+    // loads the expenses for the current month
     private void loadExpensesForCurrentMonth() {
         try {
             String monthKey = getCurrentMonthKey();
@@ -237,7 +239,7 @@ public class ExpenseInsight extends JFrame {
             JOptionPane.showMessageDialog(this, "Error loading expenses: " + e.getMessage());
         }
     }
-
+    // loads the calendar
     private void updateCalendar() {
         calendarPanel.removeAll();
 
@@ -288,7 +290,7 @@ public class ExpenseInsight extends JFrame {
         calendarPanel.revalidate();
         calendarPanel.repaint();
     }
-
+    // adds the expenses
     public void addExpense(String category, int amount, int day) {
         try {
             String monthKey = getCurrentMonthKey();
