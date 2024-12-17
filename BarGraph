@@ -3,8 +3,8 @@ import java.awt.*;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
-import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.Plot;
+import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.chart.renderer.category.BarRenderer;
@@ -12,8 +12,8 @@ import java.util.Map;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap; 
-import java.sql.*;
+import java.sql.SQLException;
+import java.util.HashMap;
 
 public class BarGraph extends JFrame {
 
@@ -30,12 +30,7 @@ public class BarGraph extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        // Generate bar graph with the provided data
         generateBarGraph();
-    }
-
-    private String getMonthName(int monthIndex) {
-        return new java.text.DateFormatSymbols().getMonths()[monthIndex];
     }
 
     private void generateBarGraph() {
@@ -43,11 +38,11 @@ public class BarGraph extends JFrame {
         double totalExpenses = 0;
         double totalIncome = 0;
 
-        // List of months in correct order (January to December)
+        // List of months in order
         List<String> months = new ArrayList<>();
         Collections.addAll(months, "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec");
 
-        // Loop through sorted months and add data
+        // Populate the dataset
         for (String month : months) {
             double expense = monthlyExpenses.getOrDefault(month, 0);
             double income = monthlyIncome.getOrDefault(month, 0);
@@ -58,132 +53,72 @@ public class BarGraph extends JFrame {
             totalExpenses += expense;
             totalIncome += income;
 
-            // Add saved amount (income - expense)
+            // Calculate savings
             double saved = income - expense;
             dataset.addValue(saved, "Saved", month);
         }
 
-        // Calculate total savings
         double totalSavings = totalIncome - totalExpenses;
 
-        // Create the bar chart
         JFreeChart chart = ChartFactory.createBarChart(
-                "2024 Finance Report",  // Title
-                "Month",                // X-axis label
-                "Amount",               // Y-axis label
-                dataset,                // Dataset
+                "2024 Finance Report",
+                "Month",
+                "Amount",
+                dataset,
                 PlotOrientation.VERTICAL,
-                true,                   // Include legend
-                true,                   // Tooltips
-                false                   // URLs
+                true,
+                true,
+                false
         );
 
-        // Customizing the background color of the plot
+        // Customizing the plot background color
         Plot plot = chart.getPlot();
-        plot.setBackgroundPaint(Color.WHITE);  // Change the background color of the plot area
+        plot.setBackgroundPaint(Color.WHITE); // Set the plot area background to white
 
         // Customizing the chart background color
-        chart.setBackgroundPaint(new Color(172, 217, 230));  // Light gray background
+        chart.setBackgroundPaint(new Color(172, 217, 230)); // Set the chart background to light gray-blue
 
-        // Customizing the colors of the bars
+        // Customizing the bars
         CategoryPlot categoryPlot = chart.getCategoryPlot();
         BarRenderer renderer = (BarRenderer) categoryPlot.getRenderer();
+        renderer.setSeriesPaint(0, new Color(254, 214, 0)); // Expenses (Yellow)
+        renderer.setSeriesPaint(1, new Color(0, 128, 128)); // Income (Teal)
+        renderer.setSeriesPaint(2, new Color(34, 139, 34)); // Saved (Green)
 
-        // Set colors for each series (Expenses, Income, Saved)
-        renderer.setSeriesPaint(0, new Color(254, 214, 0));  // Red for Expenses
-        renderer.setSeriesPaint(1, new Color(0, 128, 128)); // Steel Blue for Income
-        renderer.setSeriesPaint(2, new Color(34, 139, 34));  // Forest Green for Saved
-
-        // Chart panel
         ChartPanel chartPanel = new ChartPanel(chart);
 
-        // Panel for totals (expenses, income, savings)
         JPanel totalPanel = new JPanel();
-        totalPanel.setLayout(new GridLayout(1, 3)); // 3 columns layout
+        totalPanel.setLayout(new GridLayout(1, 3));
         totalPanel.add(new JLabel("Total Expenses: " + String.format("%.2f", totalExpenses)));
         totalPanel.add(new JLabel("Total Income: " + String.format("%.2f", totalIncome)));
         totalPanel.add(new JLabel("Total Savings: " + String.format("%.2f", totalSavings)));
 
-        // Add total panel and chart to the main frame
         add(totalPanel, BorderLayout.NORTH);
         add(chartPanel, BorderLayout.CENTER);
     }
 
     public static void main(String[] args) {
-        // Predefined data for expenses and income
+        ExpenseTracker tracker = new ExpenseTracker();
         Map<String, Integer> expenses = new HashMap<>();
-        Map<String, Integer> income = new HashMap <>();
+        Map<String, Integer> income = new HashMap<>();
 
-        
-        // Hardcoded data for demonstration
-        expenses.put("Jan", 500);
-        expenses.put("Feb", 300);
-        expenses.put("Mar", 400);
-        expenses.put("Apr", 450);
-        expenses.put("May", 600);
-        expenses.put("Jun", 350);
-        expenses.put("Jul", 700);
-        expenses.put("Aug", 800);
-        expenses.put("Sep", 650);
-        expenses.put("Oct", 500);
-        expenses.put("Nov", 400);
-        expenses.put("Dec", 300);
+        // Fetch data from database
+        try {
+            for (String month : List.of("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")) {
+                // Fetch expenses for the month
+                expenses.put(month, tracker.getTotal(month));
 
-        income.put("Jan", 1000);
-        income.put("Feb", 800);
-        income.put("Mar", 900);
-        income.put("Apr", 950);
-        income.put("May", 1200);
-        income.put("Jun", 1100);
-        income.put("Jul", 1300);
-        income.put("Aug", 1400);
-        income.put("Sep", 1250);
-        income.put("Oct", 1150);
-        income.put("Nov", 1050);
-        income.put("Dec", 950);
-
-        // Fetch data from the database if available
-        if (isDatabaseAvailable("jdbc:mysql://localhost:3306/finance_db", "root", "password")) {
-            expenses = fetchData("expenses");
-            income = fetchData("income");
-        } else {
-            System.out.println("No database found. Using hardcoded data...");
+                // Fetch income (budget) for the month
+                Map<String, Integer> budget = tracker.getBudget(month);
+                income.put(month, budget != null ? budget.getOrDefault("amount", 0) : 0);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Error fetching data from database. Please ensure database is configured correctly.");
         }
 
-        // Create the BarGraph with the data
+        // Launch the bar graph
         BarGraph barGraph = new BarGraph(expenses, income);
         barGraph.setVisible(true);
     }
-
-    // Method to check if the database is available
-    public static boolean isDatabaseAvailable(String dbUrl, String user, String password) {
-        try (Connection connection = DriverManager.getConnection(dbUrl, user, password)) {
-            return connection != null;
-        } catch (SQLException e) {
-            return false;
-        }
-    }
-
-    // Method to fetch data from the database
-    public static Map<String, Integer> fetchData(String tableName) {
-        Map<String, Integer> dataMap = new HashMap<>();
-        String query = "SELECT month, amount FROM " + tableName;
-
-        try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/finance_db", "root", "password");
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(query)) {
-
-            while (rs.next()) {
-                String month = rs.getString("month");
-                int amount = rs.getInt("amount");
-                dataMap.put(month, amount);
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return dataMap;
-    }
 }
-
